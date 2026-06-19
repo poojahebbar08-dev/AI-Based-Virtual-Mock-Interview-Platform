@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage HR - Admin Panel</title>
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f7fa; margin: 0; }
+        .navbar { background: #ffffff; color: #fff; padding: 1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
+        .container { max-width: 1100px; margin: 2rem auto; background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { background: #fafbff; font-weight: 600; color: #444; }
+        .badge { padding: 4px 10px; border-radius: 999px; font-size: 12px; }
+        .active { background: #e6fffa; color: #0f766e; }
+        .inactive { background: #fee2e2; color: #991b1b; }
+        .btn { display:inline-block; padding: 8px 12px; border-radius: 8px; text-decoration:none; border:none; cursor:pointer; }
+        .btn-primary { background: #ffffff; color:#fff; }
+        .btn-ghost { background: #f3f4f6; color:#374151; }
+        .header-actions { display:flex; gap: .5rem; }
+        .msg { margin-bottom:1rem; padding:.75rem 1rem; border-radius:8px; }
+        .msg-success { background:#ecfdf5; color:#065f46; }
+        .msg-error { background:#fee2e2; color:#991b1b; }
+    </style>
+
+    <!-- AIRBNB THEME OVERRIDES -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rausch: #ff385c;
+            --rausch-active: #e00b41;
+            --ink: #222222;
+            --canvas: #ffffff;
+            --surface-soft: #f7f7f7;
+            --hairline: #dddddd;
+            --muted: #6a6a6a;
+            --shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            background: var(--canvas) !important;
+            color: var(--ink) !important;
+        }
+
+        .container, .form-container, .card, .dashboard-card {
+            background: var(--canvas) !important;
+            border-radius: 14px !important;
+            border: 1px solid var(--hairline) !important;
+            box-shadow: var(--shadow) !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--ink) !important;
+            font-weight: 600 !important;
+        }
+
+        button, .btn, .btn-primary, input[type="submit"] {
+            background: var(--rausch) !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            border: none !important;
+            padding: 14px 24px !important;
+            font-weight: 500 !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
+            text-transform: none !important;
+            font-size: 16px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        button:hover, .btn:hover, .btn-primary:hover, input[type="submit"]:hover {
+            background: var(--rausch-active) !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn-secondary, .btn-outline, .btn-cancel {
+            background: var(--canvas) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--ink) !important;
+        }
+
+        .btn-secondary:hover, .btn-outline:hover, .btn-cancel:hover {
+            background: var(--surface-soft) !important;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], input[type="time"], textarea, select, .form-control {
+            background: var(--canvas) !important;
+            border: 1px solid var(--hairline) !important;
+            border-radius: 8px !important;
+            color: var(--ink) !important;
+            padding: 14px 12px !important;
+            box-shadow: none !important;
+            width: 100% !important;
+        }
+
+        input:focus, textarea:focus, select:focus, .form-control:focus {
+            border: 2px solid var(--ink) !important;
+            outline: none !important;
+            padding: 13px 11px !important;
+        }
+
+        a {
+            color: var(--ink) !important;
+            font-weight: 500 !important;
+            text-decoration: underline !important;
+        }
+
+        a:hover {
+            color: var(--muted) !important;
+        }
+
+        .header, nav, .navbar, .top-nav, .sidebar {
+            background: var(--canvas) !important;
+            border-bottom: 1px solid var(--hairline) !important;
+            box-shadow: none !important;
+            color: var(--ink) !important;
+        }
+
+        .header *, nav *, .navbar *, .sidebar * {
+            color: var(--ink) !important;
+        }
+
+        i.fa, i.fas, i.far, i.fab {
+            color: var(--ink) !important;
+        }
+
+        .btn i, button i, .btn-primary i {
+            color: #ffffff !important;
+        }
+
+        .home-btn {
+            background: var(--surface-soft) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--hairline) !important;
+            text-decoration: none !important;
+        }
+        .home-btn:hover {
+            background: var(--hairline) !important;
+        }
+
+        .alert-success {
+            background: #e8f9e8 !important;
+            color: #1a5e1a !important;
+            border: 1px solid #1a5e1a !important;
+        }
+        
+        .alert-error, .alert-danger {
+            background: #fdf2f2 !important;
+            color: var(--rausch) !important;
+            border: 1px solid var(--rausch) !important;
+        }
+
+        /* Remove background gradients */
+        body { background-image: none !important; }
+        .header { background-image: none !important; }
+        .btn { background-image: none !important; }
+        .logo { background-clip: initial !important; -webkit-text-fill-color: initial !important; color: var(--rausch) !important; }
+        .logo-icon { background: var(--rausch) !important; color: white !important; }
+        
+        /* Specific adjustments for search/pills */
+        .search-bar, .pill {
+            border-radius: 9999px !important;
+        }
+
+        /* Listing card adjustments */
+        .property-card {
+            border-radius: 14px !important;
+            overflow: hidden !important;
+            border: none !important;
+        }
+
+        /* Fix label colors */
+        label {
+            color: var(--ink) !important;
+            font-weight: 500 !important;
+        }
+    </style>
+    <!-- END AIRBNB THEME -->
+</head>
+<body>
+    <div class="navbar">
+        <div>🔧 Manage HR</div>
+        <div>Welcome, {{ admin_name }}</div>
+    </div>
+    <div class="container">
+        <div class="header-actions">
+            <a class="btn btn-ghost" href="{% url 'admin_dashboard' %}">← Back to Dashboard</a>
+            <a class="btn btn-primary" href="{% url 'hr_registration' %}">+ Register New HR</a>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="msg {% if message.tags == 'success' %}msg-success{% else %}msg-error{% endif %}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Username</th>
+                    <th>Field</th>
+                    <th>Experience</th>
+                    <th>Status</th>
+                    <th style="width:220px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hr in hrs %}
+                <tr>
+                    <td>{{ hr.full_name }}</td>
+                    <td>{{ hr.email }}</td>
+                    <td>{{ hr.username }}</td>
+                    <td>{{ hr.field_of_expertise }}</td>
+                    <td>{{ hr.years_of_experience }} yrs</td>
+                    <td>
+                        {% if hr.is_active %}<span class="badge active">Active</span>{% else %}<span class="badge inactive">Inactive</span>{% endif %}
+                    </td>
+                    <td>
+                        <a class="btn btn-ghost" href="{% url 'toggle_hr_active' hr.id %}">{% if hr.is_active %}Deactivate{% else %}Activate{% endif %}</a>
+                        <a class="btn btn-primary" style="margin-left:6px;" href="{% url 'edit_hr' hr.id %}">Edit</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7">No HRs found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+
+
+

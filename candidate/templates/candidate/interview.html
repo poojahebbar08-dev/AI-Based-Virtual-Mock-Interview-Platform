@@ -1,0 +1,944 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<head>
+   <link rel="stylesheet" href="{% static 'css/interview-styles.css' %}">
+   <!-- CodeMirror -->
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/sql/sql.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/shell/shell.min.js"></script>
+   <style>
+       .timer {
+           font-size: 24px;
+           font-weight: bold;
+           color: #e74c3c;
+           text-align: center;
+           margin: 10px 0;
+           padding: 10px;
+           background: #ffffff;
+           border-radius: 8px;
+       }
+       
+       .recording-indicator {
+           background: #e74c3c;
+           color: #222222;
+           padding: 10px;
+           border-radius: 8px;
+           text-align: center;
+           margin: 10px 0;
+           animation: pulse 1.5s infinite;
+       }
+       
+       @keyframes pulse {
+           0% { opacity: 1; }
+           50% { opacity: 0.7; }
+           100% { opacity: 1; }
+       }
+       
+       .transcript-display {
+           background: #ffffff;
+           border: 1px solid #ddd;
+           border-radius: 8px;
+           padding: 15px;
+           margin: 10px 0;
+           min-height: 100px;
+           font-style: italic;
+       }
+       
+       .mode-button {
+           background: #3498db;
+           color: #222222;
+           border: none;
+           padding: 12px 24px;
+           margin: 5px;
+           border-radius: 8px;
+           cursor: pointer;
+           font-size: 16px;
+           transition: background 0.3s;
+       }
+       
+       .mode-button:hover {
+           background: #2980b9;
+       }
+       
+       .mode-button.active {
+           background: #27ae60;
+       }
+       
+       .answer-section {
+           background: white;
+           border: 2px solid #3498db;
+           border-radius: 8px;
+           padding: 20px;
+           margin: 15px 0;
+       }
+       
+       .question-display {
+           background: #ecf0f1;
+           padding: 20px;
+           border-radius: 8px;
+           margin-bottom: 20px;
+           border-left: 5px solid #3498db;
+       }
+       
+       .action-buttons {
+           margin-top: 20px;
+           text-align: center;
+       }
+       
+       .action-buttons button {
+           margin: 5px;
+           padding: 10px 20px;
+           border: none;
+           border-radius: 8px;
+           cursor: pointer;
+           font-size: 14px;
+       }
+   </style>
+   <!-- MediaPipe Face Mesh for Proctoring and Liveness Detection -->
+   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+   <!-- Face-API.js for Biometric/Emotion Analysis -->
+   <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
+
+    <!-- AIRBNB THEME OVERRIDES -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rausch: #ff385c;
+            --rausch-active: #e00b41;
+            --ink: #222222;
+            --canvas: #ffffff;
+            --surface-soft: #f7f7f7;
+            --hairline: #dddddd;
+            --muted: #6a6a6a;
+            --shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            background: var(--canvas) !important;
+            color: var(--ink) !important;
+        }
+
+        .container, .form-container, .card, .dashboard-card {
+            background: var(--canvas) !important;
+            border-radius: 14px !important;
+            border: 1px solid var(--hairline) !important;
+            box-shadow: var(--shadow) !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--ink) !important;
+            font-weight: 600 !important;
+        }
+
+        button, .btn, .btn-primary, input[type="submit"] {
+            background: var(--rausch) !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            border: none !important;
+            padding: 14px 24px !important;
+            font-weight: 500 !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
+            text-transform: none !important;
+            font-size: 16px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        button:hover, .btn:hover, .btn-primary:hover, input[type="submit"]:hover {
+            background: var(--rausch-active) !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn-secondary, .btn-outline, .btn-cancel {
+            background: var(--canvas) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--ink) !important;
+        }
+
+        .btn-secondary:hover, .btn-outline:hover, .btn-cancel:hover {
+            background: var(--surface-soft) !important;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], input[type="time"], textarea, select, .form-control {
+            background: var(--canvas) !important;
+            border: 1px solid var(--hairline) !important;
+            border-radius: 8px !important;
+            color: var(--ink) !important;
+            padding: 14px 12px !important;
+            box-shadow: none !important;
+            width: 100% !important;
+        }
+
+        input:focus, textarea:focus, select:focus, .form-control:focus {
+            border: 2px solid var(--ink) !important;
+            outline: none !important;
+            padding: 13px 11px !important;
+        }
+
+        a {
+            color: var(--ink) !important;
+            font-weight: 500 !important;
+            text-decoration: underline !important;
+        }
+
+        a:hover {
+            color: var(--muted) !important;
+        }
+
+        .header, nav, .navbar, .top-nav, .sidebar {
+            background: var(--canvas) !important;
+            border-bottom: 1px solid var(--hairline) !important;
+            box-shadow: none !important;
+            color: var(--ink) !important;
+        }
+
+        .header *, nav *, .navbar *, .sidebar * {
+            color: var(--ink) !important;
+        }
+
+        i.fa, i.fas, i.far, i.fab {
+            color: var(--ink) !important;
+        }
+
+        .btn i, button i, .btn-primary i {
+            color: #ffffff !important;
+        }
+
+        .home-btn {
+            background: var(--surface-soft) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--hairline) !important;
+            text-decoration: none !important;
+        }
+        .home-btn:hover {
+            background: var(--hairline) !important;
+        }
+
+        .alert-success {
+            background: #e8f9e8 !important;
+            color: #1a5e1a !important;
+            border: 1px solid #1a5e1a !important;
+        }
+        
+        .alert-error, .alert-danger {
+            background: #fdf2f2 !important;
+            color: var(--rausch) !important;
+            border: 1px solid var(--rausch) !important;
+        }
+
+        /* Remove background gradients */
+        body { background-image: none !important; }
+        .header { background-image: none !important; }
+        .btn { background-image: none !important; }
+        .logo { background-clip: initial !important; -webkit-text-fill-color: initial !important; color: var(--rausch) !important; }
+        .logo-icon { background: var(--rausch) !important; color: white !important; }
+        
+        /* Specific adjustments for search/pills */
+        .search-bar, .pill {
+            border-radius: 9999px !important;
+        }
+
+        /* Listing card adjustments */
+        .property-card {
+            border-radius: 14px !important;
+            overflow: hidden !important;
+            border: none !important;
+        }
+
+        /* Fix label colors */
+        label {
+            color: var(--ink) !important;
+            font-weight: 500 !important;
+        }
+    </style>
+    <!-- END AIRBNB THEME -->
+</head>
+
+<div class="container">
+    <div class="question-display">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>🎤 AI Interview Session</h2>
+            <div style="font-size: 20px; font-weight: bold; color: #e74c3c; background: #fff; padding: 10px; border-radius: 8px; border: 2px solid #e74c3c;">
+                ⏱️ Time Left: <span id="global-timer">03:00</span>
+            </div>
+        </div>
+        <h3>Question {{ current_index|add:1 }} of {{ total }}</h3>
+        <p id="question-text" style="font-size: 18px; line-height: 1.6;">{{ question }}</p>
+    </div>
+    
+    <div id="mode-selection" class="answer-section">
+        <h4>Choose your answer method:</h4>
+        <button class="mode-button" onclick="startChatMode()">✍️ Answer via Text</button>
+        <button class="mode-button" onclick="startVoiceMode()">🎤 Answer via Voice</button>
+        {% if is_it_role %}
+        <button class="mode-button" onclick="startCodeMode()">💻 Code Answer</button>
+        {% endif %}
+    </div>
+
+    <div id="chat-answer" class="answer-section" style="display:none;">
+        <h4>✍️ Text Answer</h4>
+        <form method="post">
+            {% csrf_token %}
+            <textarea name="chat_answer" rows="6" cols="60" placeholder="Type your answer here..." 
+                      style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;" required></textarea><br><br>
+            <input type="hidden" name="mode" value="chat">
+            <input type="hidden" name="question_index" value="{{ current_index }}">
+            <button type="submit" style="background: #27ae60; color: #ffffff; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;">
+                📤 Submit Answer
+            </button>
+        </form>
+    </div>
+
+    {% if is_it_role %}
+    <div id="code-answer" class="answer-section" style="display:none;">
+        <h4>💻 Code Answer</h4>
+        <div style="margin-bottom: 15px;">
+            <label for="language-select" style="font-weight: 600;">Select Language: </label>
+            <select id="language-select" onchange="changeLanguage()" style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ddd; width: auto; display: inline-block; margin-left: 10px;">
+                <option value="python">Python</option>
+                <option value="javascript">JavaScript (Node.js)</option>
+                <option value="java">Java (JDK 17)</option>
+                <option value="html">HTML/CSS/JS (Frontend Live Preview)</option>
+                <option value="sql">SQL (SQLite)</option>
+                <option value="shell">Shell Script</option>
+            </select>
+        </div>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 2; min-width: 300px;">
+                <textarea id="code-editor" name="code_answer"># Write your python code here
+# Note: You can install packages by prefixing with '!', e.g.:
+# !pip install numpy
+
+print("Hello World")
+</textarea>
+                <div style="margin-top: 10px;">
+                    <button type="button" onclick="runCode()" style="background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
+                        ▶️ Run Code
+                    </button>
+                </div>
+            </div>
+            <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 10px;">
+                <div id="terminal-container" style="background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 8px; font-family: monospace; overflow-y: auto; flex: 1; min-height: 200px; max-height: 400px; white-space: pre-wrap;"><span id="terminal-output">Terminal output will appear here...</span></div>
+                <iframe id="html-preview" style="display: none; background: white; width: 100%; border: 1px solid #ddd; border-radius: 8px; flex: 1; min-height: 300px;"></iframe>
+            </div>
+        </div>
+        <form method="post" id="code-submit-form" style="margin-top: 20px;">
+            {% csrf_token %}
+            <input type="hidden" name="chat_answer" id="final-code-answer">
+            <input type="hidden" name="mode" value="chat"> <!-- Saving as chat text -->
+            <input type="hidden" name="question_index" value="{{ current_index }}">
+            <button type="submit" onclick="document.getElementById('final-code-answer').value = editor.getValue();" style="background: #27ae60; color: #ffffff; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;">
+                📤 Submit Code Answer
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div id="voice-answer" class="answer-section" style="display:none;">
+        <h4>🎤 Voice Answer</h4>
+        <div id="recording-status" class="recording-indicator" style="display:none;">
+            🔴 Recording in progress...
+        </div>
+        <div id="timer-display" class="timer" style="display:none;">
+            Time remaining: <span id="time-left">120</span> seconds
+        </div>
+        <div id="transcript-container" class="transcript-display" style="display:none;">
+            <strong>Your transcribed answer:</strong><br>
+            <span id="transcript-text"></span>
+        </div>
+        
+        <div id="voice-controls">
+            <button onclick="startRecording()" id="start-btn" style="background: #e74c3c; color: #222222; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; margin: 5px;">
+                🎤 Start Recording
+            </button>
+            <button onclick="stopRecording()" id="stop-btn" style="background: #95a5a6; color: #222222; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; margin: 5px; display:none;">
+                ⏹️ Stop Recording
+            </button>
+        </div>
+        
+        <form method="post" id="voice-form" style="margin-top: 15px;">
+            {% csrf_token %}
+            <input type="hidden" name="voice_text" id="voice-text">
+            <input type="hidden" name="mode" value="voice">
+            <input type="hidden" name="question_index" value="{{ current_index }}">
+            <button type="submit" id="submit-voice" style="background: #27ae60; color: #222222; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; display:none;">
+                📤 Submit Voice Answer
+            </button>
+        </form>
+    </div>
+
+    <div class="action-buttons">
+        <form method="post" style="display:inline;" id="skip-question-form">
+            {% csrf_token %}
+            <input type="hidden" name="question_index" value="{{ current_index }}">
+            <button type="submit" name="skip_question" style="background-color: #f39c12;">⏭️ Skip This Question</button>
+        </form>
+
+        <form action="{% url 'interview_complete' %}" method="post" style="display:inline;" id="complete-interview-form">
+            {% csrf_token %}
+            <button type="submit" style="background-color: #e74c3c;">🏁 Complete Interview</button>
+        </form>
+    </div>
+</div>
+
+<div id="camera-container" style="position: fixed; bottom: 20px; right: 20px; width: 200px; height: 150px; border: 3px solid #27ae60; border-radius: 8px; overflow: hidden; background: #000; z-index: 1000; display: none; box-shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;">
+    <video id="video-element" style="width: 100%; height: 100%; object-fit: cover;" autoplay playsinline muted></video>
+    <div id="proctor-status" style="position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; padding: 2px 5px; border-radius: 3px;">
+        Proctoring Active
+    </div>
+    <div id="emotion-status" style="position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; padding: 2px 5px; border-radius: 3px;">
+        Emotion: --
+    </div>
+</div>
+
+<!-- Hidden inputs to store biometric analysis data -->
+<form id="biometric-data-form" style="display:none;">
+    <input type="hidden" id="bio_happy" value="0">
+    <input type="hidden" id="bio_sad" value="0">
+    <input type="hidden" id="bio_angry" value="0">
+    <input type="hidden" id="bio_fearful" value="0">
+    <input type="hidden" id="bio_disgusted" value="0">
+    <input type="hidden" id="bio_surprised" value="0">
+    <input type="hidden" id="bio_neutral" value="0">
+    <input type="hidden" id="bio_total_frames" value="0">
+</form>
+
+<script>
+let recognition;
+let timer;
+let timeLeft = 120;
+let isRecording = false;
+
+function startChatMode() {
+    document.getElementById('chat-answer').style.display = 'block';
+    document.getElementById('voice-answer').style.display = 'none';
+    if(document.getElementById('code-answer')) document.getElementById('code-answer').style.display = 'none';
+    document.getElementById('mode-selection').style.display = 'none';
+}
+
+function startVoiceMode() {
+    document.getElementById('voice-answer').style.display = 'block';
+    document.getElementById('chat-answer').style.display = 'none';
+    if(document.getElementById('code-answer')) document.getElementById('code-answer').style.display = 'none';
+    document.getElementById('mode-selection').style.display = 'none';
+}
+
+let editor;
+function initCodeMirror() {
+    if (!editor && document.getElementById('code-editor')) {
+        editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+            mode: 'python',
+            theme: 'dracula',
+            lineNumbers: true,
+            indentUnit: 4,
+            matchBrackets: true
+        });
+        editor.setSize("100%", "300px");
+    }
+}
+
+function startCodeMode() {
+    if(document.getElementById('code-answer')) {
+        document.getElementById('code-answer').style.display = 'block';
+        document.getElementById('chat-answer').style.display = 'none';
+        document.getElementById('voice-answer').style.display = 'none';
+        document.getElementById('mode-selection').style.display = 'none';
+        
+        // Auto-select language based on designation
+        if (!editor) {
+            const designation = "{{ designation|lower }}";
+            const langSelect = document.getElementById('language-select');
+            if (designation.includes('web') || designation.includes('frontend') || designation.includes('full stack')) {
+                langSelect.value = 'html';
+            } else if (designation.includes('data analyst') || designation.includes('machine learning')) {
+                langSelect.value = 'python';
+            } else if (designation.includes('devops') || designation.includes('system admin')) {
+                langSelect.value = 'shell';
+            } else if (designation.includes('database')) {
+                langSelect.value = 'sql';
+            } else if (designation.includes('android')) {
+                langSelect.value = 'java';
+            } else if (designation.includes('node') || designation.includes('javascript')) {
+                langSelect.value = 'javascript';
+            }
+        }
+        
+        initCodeMirror();
+        // Give codemirror a tiny bit of time to render correctly
+        setTimeout(() => { 
+            if(editor) {
+                editor.refresh();
+                if (editor.getValue().includes("# Write your python code here") && document.getElementById('language-select').value !== 'python') {
+                    changeLanguage(); // apply the auto-selected language content
+                }
+            } 
+        }, 10);
+    }
+}
+
+function changeLanguage() {
+    if (!editor) return;
+    const lang = document.getElementById('language-select').value;
+    const terminalContainer = document.getElementById('terminal-container');
+    const htmlPreview = document.getElementById('html-preview');
+    
+    if (lang === 'html') {
+        terminalContainer.style.display = 'none';
+        htmlPreview.style.display = 'block';
+    } else {
+        terminalContainer.style.display = 'block';
+        htmlPreview.style.display = 'none';
+    }
+
+    if (lang === 'python') {
+        editor.setOption('mode', 'python');
+        editor.setValue("# Write your python code here\n# Note: You can install packages by prefixing with '!', e.g.:\n# !pip install numpy\n\nprint('Hello World')\n");
+    } else if (lang === 'javascript') {
+        editor.setOption('mode', 'javascript');
+        editor.setValue("// Write your javascript code here\n// Note: You can install packages by prefixing with '!', e.g.:\n// !npm install lodash\n\nconsole.log('Hello World');\n");
+    } else if (lang === 'java') {
+        editor.setOption('mode', 'text/x-java');
+        editor.setValue("// Write your Java code here\n// Note: Please keep the public class name to match the file or use a simple structure.\n\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello Java!\");\n    }\n}\n");
+    } else if (lang === 'html') {
+        editor.setOption('mode', 'htmlmixed');
+        editor.setValue("<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: sans-serif; text-align: center; margin-top: 50px; }\n    h1 { color: #3498db; }\n  </style>\n</head>\n<body>\n  <h1>Hello Web Developer!</h1>\n  <button onclick=\"alert('Button clicked!')\">Click Me</button>\n  <script>\n    console.log('JS is running');\n  <\\/script>\n</body>\n</html>\n");
+    } else if (lang === 'sql') {
+        editor.setOption('mode', 'text/x-sql');
+        editor.setValue("-- Write your SQL queries here\n-- There are two mock tables available: employees and departments\n\nSELECT * FROM employees;\n");
+    } else if (lang === 'shell') {
+        editor.setOption('mode', 'shell');
+        editor.setValue("# Write your shell script here\n\necho \"Hello from Shell!\"\nls -la\n");
+    }
+}
+
+async function runCode() {
+    if(!editor) return;
+    const code = editor.getValue();
+    const language = document.getElementById('language-select').value;
+    
+    if (language === 'html') {
+        const iframe = document.getElementById('html-preview');
+        iframe.srcdoc = code;
+        return;
+    }
+
+    const terminal = document.getElementById('terminal-output');
+    terminal.innerHTML = "Running...\n";
+    try {
+        const response = await fetch("{% url 'execute_code' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({code: code, language: language})
+        });
+        const data = await response.json();
+        
+        let outputText = "";
+        if (data.output) {
+            // Escape HTML entities to prevent rendering arbitrary HTML from user output
+            outputText += data.output.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        if (data.error) {
+            outputText += '<span style="color: #ff5555;">' + data.error.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>';
+        }
+        
+        terminal.innerHTML = outputText || '<span style="color: #888;">(No output)</span>';
+    } catch(err) {
+        terminal.innerHTML = '<span style="color: #ff5555;">Error: ' + err.message + '</span>';
+    }
+}
+
+function startRecording() {
+    if (isRecording) return;
+    
+    isRecording = true;
+    timeLeft = 120;
+    
+    // Show recording status and timer
+    document.getElementById('recording-status').style.display = 'block';
+    document.getElementById('timer-display').style.display = 'block';
+    document.getElementById('transcript-container').style.display = 'block';
+    document.getElementById('start-btn').style.display = 'none';
+    document.getElementById('stop-btn').style.display = 'inline-block';
+    document.getElementById('submit-voice').style.display = 'none';
+    
+    // Start speech recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        
+        let finalTranscript = '';
+        
+        recognition.onresult = function(event) {
+            let interimTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript + ' ';
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            
+            document.getElementById('transcript-text').textContent = finalTranscript + interimTranscript;
+            document.getElementById('voice-text').value = finalTranscript;
+        };
+        
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+            stopRecording();
+        };
+        
+        recognition.start();
+    } else {
+        alert("Speech recognition not supported in this browser. Please use Chrome or Edge.");
+        stopRecording();
+        return;
+    }
+    
+    // Start countdown timer
+    updateTimer();
+}
+
+function updateTimer() {
+    if (!isRecording) return;
+    
+    document.getElementById('time-left').textContent = timeLeft;
+    
+    if (timeLeft <= 0) {
+        stopRecording();
+        alert("⏰ Time's up! Your recording has been stopped automatically.");
+        return;
+    }
+    
+    timeLeft--;
+    setTimeout(updateTimer, 1000);
+}
+
+function stopRecording() {
+    if (!isRecording) return;
+    
+    isRecording = false;
+    
+    // Stop speech recognition
+    if (recognition) {
+        recognition.stop();
+    }
+    
+    // Clear timer
+    clearTimeout(timer);
+    
+    // Update UI
+    document.getElementById('recording-status').style.display = 'none';
+    document.getElementById('timer-display').style.display = 'none';
+    document.getElementById('start-btn').style.display = 'inline-block';
+    document.getElementById('stop-btn').style.display = 'none';
+    
+    // Show submit button if there's transcript
+    const transcript = document.getElementById('voice-text').value;
+    if (transcript && transcript.trim().length > 0) {
+        document.getElementById('submit-voice').style.display = 'inline-block';
+    }
+}
+
+// Auto-submit form when voice text is available
+document.getElementById('voice-text').addEventListener('input', function() {
+    const transcript = this.value;
+    if (transcript && transcript.trim().length > 0) {
+        document.getElementById('submit-voice').style.display = 'inline-block';
+    }
+});
+
+// Proctoring variables
+let proctoringStarted = false;
+let noFaceTimer = null;
+let warningCount = 0;
+let isWarningActive = false;
+
+// Liveness detection variables
+let previousLandmarks = null;
+let livenessScore = 100; // Start with high confidence
+let lastLivenessCheck = Date.now();
+let lastLookAwayTime = 0;
+
+function getDistance(p1, p2) {
+    return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+}
+
+function initProctoring() {
+    if (proctoringStarted) return;
+    proctoringStarted = true;
+    
+    document.getElementById('camera-container').style.display = 'block';
+    const videoElement = document.getElementById('video-element');
+    const statusElement = document.getElementById('proctor-status');
+    
+    const faceMesh = new FaceMesh({locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+    }});
+    
+    faceMesh.setOptions({
+        maxNumFaces: 5,
+        refineLandmarks: true,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+    });
+    
+    faceMesh.onResults((results) => {
+        if (isWarningActive) return;
+        
+        if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+            // No face detected
+            statusElement.style.background = "rgba(231, 76, 60, 0.8)";
+            statusElement.innerText = "Face not detected!";
+            document.getElementById('camera-container').style.borderColor = "#e74c3c";
+            
+            if (!noFaceTimer) {
+                noFaceTimer = setTimeout(() => {
+                    issueWarning("Face not detected! Please ensure your face is clearly visible.");
+                }, 3000); // 3 seconds threshold
+            }
+        } else if (results.multiFaceLandmarks.length > 1) {
+            // Multiple faces detected
+            statusElement.style.background = "rgba(231, 76, 60, 0.8)";
+            statusElement.innerText = "Multiple Faces Detected!";
+            document.getElementById('camera-container').style.borderColor = "#e74c3c";
+            
+            if (!noFaceTimer) {
+                noFaceTimer = setTimeout(() => {
+                    issueWarning("Multiple faces detected! Only the candidate is allowed in the frame.");
+                }, 3000); // 3 seconds threshold
+            }
+        } else {
+            // Exactly 1 face detected
+            const landmarks = results.multiFaceLandmarks[0];
+            const now = Date.now();
+            
+            // Liveness Check: Landmark Variance
+            if (previousLandmarks) {
+                // Calculate movement of nose tip (landmark 1)
+                const movement = getDistance(landmarks[1], previousLandmarks[1]);
+                
+                // If movement is perfectly zero (or extremely small), decrease liveness score
+                if (movement < 0.0001) {
+                    livenessScore -= 2;
+                } else {
+                    livenessScore = Math.min(100, livenessScore + 5);
+                }
+            }
+            previousLandmarks = landmarks;
+            
+            // Head Pose Tracking (Looking away)
+            // Compare nose tip (1) position relative to eyes (33 and 263)
+            const leftEyeX = landmarks[33].x;
+            const rightEyeX = landmarks[263].x;
+            const noseX = landmarks[1].x;
+            
+            // Check if nose is too far outside the eyes
+            const isLookingAway = (noseX < leftEyeX - 0.05) || (noseX > rightEyeX + 0.05);
+            
+            if (isLookingAway) {
+                if (lastLookAwayTime === 0) lastLookAwayTime = now;
+            } else {
+                lastLookAwayTime = 0;
+            }
+            
+            if (livenessScore <= 0 && (now - lastLivenessCheck > 5000)) {
+                // Persistent static image detected with high confidence
+                statusElement.style.background = "rgba(231, 76, 60, 0.8)";
+                statusElement.innerText = "Static Photo Detected!";
+                document.getElementById('camera-container').style.borderColor = "#e74c3c";
+                issueWarning("Static photo detected! Please show your real face.");
+                livenessScore = 100; // Reset after warning
+                lastLivenessCheck = now;
+            } else if (lastLookAwayTime !== 0 && (now - lastLookAwayTime > 4000)) {
+                // Looking away for 4 seconds
+                statusElement.style.background = "rgba(231, 76, 60, 0.8)";
+                statusElement.innerText = "Looking Away!";
+                document.getElementById('camera-container').style.borderColor = "#e74c3c";
+                issueWarning("You seem to be looking away from the screen. Please maintain eye contact with the camera.");
+                lastLookAwayTime = 0; // Reset after warning
+            } else {
+                statusElement.style.background = "rgba(39, 174, 96, 0.8)";
+                statusElement.innerText = "Proctoring Active";
+                document.getElementById('camera-container').style.borderColor = "#27ae60";
+                
+                if (noFaceTimer) {
+                    clearTimeout(noFaceTimer);
+                    noFaceTimer = null;
+                }
+            }
+        }
+    });
+    
+    const camera = new Camera(videoElement, {
+        onFrame: async () => {
+            await faceMesh.send({image: videoElement});
+        },
+        width: 200,
+        height: 150
+    });
+    
+    camera.start().catch((err) => {
+        alert("Camera access is required for proctoring. Please allow camera permissions.");
+        proctoringStarted = false;
+        document.getElementById('camera-container').style.display = 'none';
+    });
+    
+    // Initialize Biometric/Emotion detection
+    initEmotionDetection(videoElement);
+}
+
+async function initEmotionDetection(video) {
+    // Load models from local or remote CDN
+    try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri('https://vladmandic.github.io/face-api/model');
+        await faceapi.nets.faceExpressionNet.loadFromUri('https://vladmandic.github.io/face-api/model');
+        
+        video.addEventListener('play', () => {
+            setInterval(async () => {
+                if (video.paused || video.ended || isWarningActive) return;
+                
+                const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+                
+                if (detections) {
+                    const expressions = detections.expressions;
+                    // Find the dominant expression
+                    let maxExpression = 'neutral';
+                    let maxVal = 0;
+                    for (const [expr, val] of Object.entries(expressions)) {
+                        if (val > maxVal) {
+                            maxVal = val;
+                            maxExpression = expr;
+                        }
+                    }
+                    
+                    // Update UI
+                    document.getElementById('emotion-status').innerText = 'Emotion: ' + maxExpression;
+                    
+                    // Update aggregate metrics
+                    const totalFramesEl = document.getElementById('bio_total_frames');
+                    totalFramesEl.value = parseInt(totalFramesEl.value) + 1;
+                    
+                    if (document.getElementById('bio_' + maxExpression)) {
+                        const exprEl = document.getElementById('bio_' + maxExpression);
+                        exprEl.value = parseInt(exprEl.value) + 1;
+                    }
+                }
+            }, 1000); // Check every second
+        });
+    } catch(err) {
+        console.error("Biometric analysis failed to load:", err);
+    }
+}
+
+function issueWarning(customReason) {
+    isWarningActive = true;
+    warningCount++;
+    
+    let reasonText = customReason ? customReason : "Face not detected or looking away!";
+    
+    if (warningCount === 1) {
+        alert("⚠️ WARNING 1: " + reasonText + "\nPlease look directly at the camera and do not switch tabs. The interview will be terminated after 3 warnings.");
+        resetTimer();
+    } else if (warningCount === 2) {
+        alert("⚠️ WARNING 2: " + reasonText + "\nThis is your final warning. Next time, the interview will be terminated.");
+        resetTimer();
+    } else if (warningCount >= 3) {
+        alert("⛔ INTERVIEW TERMINATED: You have failed to follow the proctoring rules multiple times.");
+        submitInterview();
+    }
+}
+
+function submitInterview() {
+    // Collect biometric data before submitting
+    const form = document.getElementById('complete-interview-form');
+    
+    // Append biometric data as hidden fields
+    const metrics = ['happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised', 'neutral', 'total_frames'];
+    metrics.forEach(m => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'bio_' + m;
+        input.value = document.getElementById('bio_' + m).value;
+        form.appendChild(input);
+    });
+    
+    form.submit();
+}
+
+function resetTimer() {
+    noFaceTimer = null;
+    setTimeout(() => {
+        isWarningActive = false;
+    }, 2000);
+}
+
+// Global Timer Logic
+let globalTimeLeft = 180; // 3 minutes
+let globalTimerInterval;
+
+function startGlobalTimer() {
+    globalTimerInterval = setInterval(function() {
+        globalTimeLeft--;
+        
+        let minutes = Math.floor(globalTimeLeft / 60);
+        let seconds = globalTimeLeft % 60;
+        document.getElementById('global-timer').textContent = 
+            (minutes < 10 ? "0" + minutes : minutes) + ":" + 
+            (seconds < 10 ? "0" + seconds : seconds);
+            
+        if (globalTimeLeft <= 0) {
+            clearInterval(globalTimerInterval);
+            alert("⏰ Time is up for this question! Moving to the next one.");
+            document.getElementById('skip-question-form').submit();
+        }
+    }, 1000);
+}
+
+// Tab switching proctoring
+document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === 'hidden') {
+        issueWarning("You switched tabs or minimized the browser!");
+    }
+});
+
+// Override the Complete Interview form submission to append biometrics
+document.addEventListener('DOMContentLoaded', () => {
+    const completeForm = document.getElementById('complete-interview-form');
+    if (completeForm) {
+        completeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitInterview();
+        });
+    }
+});
+
+// Start everything on page load
+window.addEventListener('DOMContentLoaded', (event) => {
+    initProctoring();
+    startGlobalTimer();
+});
+</script>
+{% endblock %}

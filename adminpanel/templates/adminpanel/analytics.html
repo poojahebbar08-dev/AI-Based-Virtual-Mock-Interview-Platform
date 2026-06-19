@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Analytics - Admin Panel</title>
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background:#f5f7fa; margin:0; }
+        .navbar { background: #ffffff; color:#fff; padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
+        .container { max-width: 1100px; margin: 2rem auto; background:#fff; padding:1.5rem; border-radius: 8px; box-shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px; }
+        .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1rem; }
+        .card { background:#fff; border:1px solid #eee; border-radius: 8px; padding:1rem; }
+        .title { font-weight:700; font-size:1rem; margin-bottom:.5rem; }
+        table { width:100%; border-collapse: collapse; }
+        th, td { text-align:left; padding:10px; border-bottom:1px solid #eee; }
+        th { background:#fafbff; }
+        .pill { padding: 4px 10px; border-radius: 999px; font-size: 12px; background:#eef2ff; color:#3730a3; }
+        a.btn { display:inline-block; padding:8px 12px; background:#f3f4f6; border-radius:8px; text-decoration:none; color:#374151; }
+    </style>
+
+    <!-- AIRBNB THEME OVERRIDES -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rausch: #ff385c;
+            --rausch-active: #e00b41;
+            --ink: #222222;
+            --canvas: #ffffff;
+            --surface-soft: #f7f7f7;
+            --hairline: #dddddd;
+            --muted: #6a6a6a;
+            --shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            background: var(--canvas) !important;
+            color: var(--ink) !important;
+        }
+
+        .container, .form-container, .card, .dashboard-card {
+            background: var(--canvas) !important;
+            border-radius: 14px !important;
+            border: 1px solid var(--hairline) !important;
+            box-shadow: var(--shadow) !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--ink) !important;
+            font-weight: 600 !important;
+        }
+
+        button, .btn, .btn-primary, input[type="submit"] {
+            background: var(--rausch) !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            border: none !important;
+            padding: 14px 24px !important;
+            font-weight: 500 !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
+            text-transform: none !important;
+            font-size: 16px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        button:hover, .btn:hover, .btn-primary:hover, input[type="submit"]:hover {
+            background: var(--rausch-active) !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn-secondary, .btn-outline, .btn-cancel {
+            background: var(--canvas) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--ink) !important;
+        }
+
+        .btn-secondary:hover, .btn-outline:hover, .btn-cancel:hover {
+            background: var(--surface-soft) !important;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], input[type="time"], textarea, select, .form-control {
+            background: var(--canvas) !important;
+            border: 1px solid var(--hairline) !important;
+            border-radius: 8px !important;
+            color: var(--ink) !important;
+            padding: 14px 12px !important;
+            box-shadow: none !important;
+            width: 100% !important;
+        }
+
+        input:focus, textarea:focus, select:focus, .form-control:focus {
+            border: 2px solid var(--ink) !important;
+            outline: none !important;
+            padding: 13px 11px !important;
+        }
+
+        a {
+            color: var(--ink) !important;
+            font-weight: 500 !important;
+            text-decoration: underline !important;
+        }
+
+        a:hover {
+            color: var(--muted) !important;
+        }
+
+        .header, nav, .navbar, .top-nav, .sidebar {
+            background: var(--canvas) !important;
+            border-bottom: 1px solid var(--hairline) !important;
+            box-shadow: none !important;
+            color: var(--ink) !important;
+        }
+
+        .header *, nav *, .navbar *, .sidebar * {
+            color: var(--ink) !important;
+        }
+
+        i.fa, i.fas, i.far, i.fab {
+            color: var(--ink) !important;
+        }
+
+        .btn i, button i, .btn-primary i {
+            color: #ffffff !important;
+        }
+
+        .home-btn {
+            background: var(--surface-soft) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--hairline) !important;
+            text-decoration: none !important;
+        }
+        .home-btn:hover {
+            background: var(--hairline) !important;
+        }
+
+        .alert-success {
+            background: #e8f9e8 !important;
+            color: #1a5e1a !important;
+            border: 1px solid #1a5e1a !important;
+        }
+        
+        .alert-error, .alert-danger {
+            background: #fdf2f2 !important;
+            color: var(--rausch) !important;
+            border: 1px solid var(--rausch) !important;
+        }
+
+        /* Remove background gradients */
+        body { background-image: none !important; }
+        .header { background-image: none !important; }
+        .btn { background-image: none !important; }
+        .logo { background-clip: initial !important; -webkit-text-fill-color: initial !important; color: var(--rausch) !important; }
+        .logo-icon { background: var(--rausch) !important; color: white !important; }
+        
+        /* Specific adjustments for search/pills */
+        .search-bar, .pill {
+            border-radius: 9999px !important;
+        }
+
+        /* Listing card adjustments */
+        .property-card {
+            border-radius: 14px !important;
+            overflow: hidden !important;
+            border: none !important;
+        }
+
+        /* Fix label colors */
+        label {
+            color: var(--ink) !important;
+            font-weight: 500 !important;
+        }
+    </style>
+    <!-- END AIRBNB THEME -->
+</head>
+<body>
+    <div class="navbar">
+        <div>📊 Interview Analytics</div>
+        <div>Welcome, {{ admin_name }}</div>
+    </div>
+    <div class="container">
+        <div style="display:flex; gap:.5rem; margin-bottom:1rem;">
+            <a class="btn" href="{% url 'admin_dashboard' %}">← Back to Dashboard</a>
+        </div>
+        <div class="grid">
+            <div class="card">
+                <div class="title">Total AI Interviews</div>
+                <div style="font-size:2rem; font-weight:800; color:#667eea;">{{ total_interviews }}</div>
+            </div>
+            <div class="card">
+                <div class="title">Average Score</div>
+                <div style="font-size:2rem; font-weight:800; color:#10b981;">{{ avg_score }}</div>
+            </div>
+            <div class="card">
+                <div class="title">Top Designations</div>
+                {% if top_designations %}
+                <table>
+                    <thead><tr><th>Designation</th><th>Total</th></tr></thead>
+                    <tbody>
+                        {% for row in top_designations %}
+                        <tr><td>{{ row.designation|default:'-' }}</td><td>{{ row.total }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div>No data yet.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:1rem;">
+            <div class="title">Recent Interviews</div>
+            {% if recent %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Candidate</th>
+                        <th>Role</th>
+                        <th>Designation</th>
+                        <th>Average</th>
+                        <th>Answered</th>
+                        <th>Skipped</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in recent %}
+                    <tr>
+                        <td>{{ r.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ r.candidate.email }}</td>
+                        <td>{{ r.role }}</td>
+                        <td><span class="pill">{{ r.designation }}</span></td>
+                        <td>{{ r.average }}</td>
+                        <td>{{ r.answered_questions }}</td>
+                        <td>{{ r.skipped_questions }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div>No recent interviews.</div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
+
+
+

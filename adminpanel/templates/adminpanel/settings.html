@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Settings - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --rausch: #ff385c;
+            --rausch-active: #e00b41;
+            --ink: #222222;
+            --canvas: #ffffff;
+            --surface-soft: #f7f7f7;
+            --hairline: #dddddd;
+            --muted: #6a6a6a;
+            --shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--surface-soft); color: var(--ink); margin: 0; }
+        .navbar { background: var(--canvas); color: var(--ink); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--hairline); }
+        .navbar h1 { font-size: 1.5rem; font-weight: 600; margin: 0; }
+        .navbar a { color: var(--ink); text-decoration: none; margin-left: 1rem; font-weight: 500; }
+        .navbar a:hover { color: var(--muted); }
+        
+        .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: var(--canvas); border-radius: 14px; padding: 2rem; border: 1px solid var(--hairline); box-shadow: var(--shadow); }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { font-weight: 500; color: var(--ink); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+        .help-text { font-size: 0.9rem; color: var(--muted); margin-top: 0.25rem; margin-left: 2rem; }
+        
+        .btn { background: var(--rausch); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 16px; transition: background 0.2s; }
+        .btn:hover { background: var(--rausch-active); }
+        
+        .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+        .alert-success { background: #e8f9e8; color: #1a5e1a; border: 1px solid #1a5e1a; }
+        .alert-error { background: #fdf2f2; color: var(--rausch); border: 1px solid var(--rausch); }
+        
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--rausch); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>⚙️ System Settings</h1>
+        <div>
+            <a href="{% url 'admin_dashboard' %}"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card">
+            <h2 style="margin-top: 0; margin-bottom: 1.5rem;">Job Recommendation Settings</h2>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="require_job_approval" {% if settings.require_job_approval %}checked{% endif %}>
+                        Require Admin Approval for Job Recommendations
+                    </label>
+                    <div class="help-text">
+                        If checked, automated job recommendations will be queued for admin approval before being emailed to candidates. If unchecked, they will be sent automatically.
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem;">
+                    <button type="submit" class="btn"><i class="fas fa-save"></i> Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,512 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+{% if user.is_authenticated %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/candidate_dashboard.css' %}">
+
+    <!-- AIRBNB THEME OVERRIDES -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rausch: #ff385c;
+            --rausch-active: #e00b41;
+            --ink: #222222;
+            --canvas: #ffffff;
+            --surface-soft: #f7f7f7;
+            --hairline: #dddddd;
+            --muted: #6a6a6a;
+            --shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            background: var(--canvas) !important;
+            color: var(--ink) !important;
+        }
+
+        .container, .form-container, .card, .dashboard-card {
+            background: var(--canvas) !important;
+            border-radius: 14px !important;
+            border: 1px solid var(--hairline) !important;
+            box-shadow: var(--shadow) !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--ink) !important;
+            font-weight: 600 !important;
+        }
+
+        button, .btn, .btn-primary, input[type="submit"] {
+            background: var(--rausch) !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            border: none !important;
+            padding: 14px 24px !important;
+            font-weight: 500 !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
+            text-transform: none !important;
+            font-size: 16px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        button:hover, .btn:hover, .btn-primary:hover, input[type="submit"]:hover {
+            background: var(--rausch-active) !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn-secondary, .btn-outline, .btn-cancel {
+            background: var(--canvas) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--ink) !important;
+        }
+
+        .btn-secondary:hover, .btn-outline:hover, .btn-cancel:hover {
+            background: var(--surface-soft) !important;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], input[type="time"], textarea, select, .form-control {
+            background: var(--canvas) !important;
+            border: 1px solid var(--hairline) !important;
+            border-radius: 8px !important;
+            color: var(--ink) !important;
+            padding: 14px 12px !important;
+            box-shadow: none !important;
+            width: 100% !important;
+        }
+
+        input:focus, textarea:focus, select:focus, .form-control:focus {
+            border: 2px solid var(--ink) !important;
+            outline: none !important;
+            padding: 13px 11px !important;
+        }
+
+        a {
+            color: var(--ink) !important;
+            font-weight: 500 !important;
+            text-decoration: underline !important;
+        }
+
+        a:hover {
+            color: var(--muted) !important;
+        }
+
+        .header, nav, .navbar, .top-nav, .sidebar {
+            background: var(--canvas) !important;
+            border-bottom: 1px solid var(--hairline) !important;
+            box-shadow: none !important;
+            color: var(--ink) !important;
+        }
+
+        .header *, nav *, .navbar *, .sidebar * {
+            color: var(--ink) !important;
+        }
+
+        i.fa, i.fas, i.far, i.fab {
+            color: var(--ink) !important;
+        }
+
+        .btn i, button i, .btn-primary i {
+            color: #ffffff !important;
+        }
+
+        .home-btn {
+            background: var(--surface-soft) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--hairline) !important;
+            text-decoration: none !important;
+        }
+        .home-btn:hover {
+            background: var(--hairline) !important;
+        }
+
+        .alert-success {
+            background: #e8f9e8 !important;
+            color: #1a5e1a !important;
+            border: 1px solid #1a5e1a !important;
+        }
+        
+        .alert-error, .alert-danger {
+            background: #fdf2f2 !important;
+            color: var(--rausch) !important;
+            border: 1px solid var(--rausch) !important;
+        }
+
+        /* Remove background gradients */
+        body { background-image: none !important; }
+        .header { background-image: none !important; }
+        .btn { background-image: none !important; }
+        .logo { background-clip: initial !important; -webkit-text-fill-color: initial !important; color: var(--rausch) !important; }
+        .logo-icon { background: var(--rausch) !important; color: white !important; }
+        
+        /* Specific adjustments for search/pills */
+        .search-bar, .pill {
+            border-radius: 9999px !important;
+        }
+
+        /* Listing card adjustments */
+        .property-card {
+            border-radius: 14px !important;
+            overflow: hidden !important;
+            border: none !important;
+        }
+
+        /* Fix label colors */
+        label {
+            color: var(--ink) !important;
+            font-weight: 500 !important;
+        }
+
+        /* Recommended Jobs styling */
+        .jobs-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--hairline);
+        }
+        
+        .jobs-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            color: #1f2937;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--surface-soft);
+            padding-bottom: 10px;
+        }
+        
+        .jobs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .job-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--hairline);
+            box-shadow: rgba(0,0,0,0.02) 0 2px 4px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .job-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--rausch);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform 0.3s ease;
+        }
+        
+        .job-card:hover {
+            transform: translateY(-5px);
+            box-shadow: rgba(0,0,0,0.1) 0 8px 16px;
+        }
+        
+        .job-card:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .job-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+        
+        .job-company {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #4b5563;
+        }
+        
+        .job-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        
+        .job-badge {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .job-badge.salary {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+        
+        .job-action {
+            margin-top: auto;
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .job-posted {
+            font-size: 0.85rem;
+            color: #9ca3af;
+        }
+        
+        .job-apply-btn {
+            background: transparent !important;
+            color: var(--rausch) !important;
+            border: 1px solid var(--rausch) !important;
+            padding: 8px 16px !important;
+            font-size: 0.9rem !important;
+        }
+        
+        .job-apply-btn:hover {
+            background: var(--rausch) !important;
+            color: #fff !important;
+        }
+    </style>
+    <!-- END AIRBNB THEME -->
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="dashboard-header">
+            <div class="header-top">
+                <div class="welcome-section">
+                    <h2 class="welcome-title">Welcome {{ profile.name }}</h2>
+                    <p class="welcome-subtitle">Ready to ace your next interview? Let's get started!</p>
+                </div>
+                <div class="logout-section">
+                    <a href="{% url 'logout' %}" class="logout-btn">
+                        <span class="logout-icon">🚪</span>
+                        Logout
+                    </a>
+                </div>
+            </div>
+            
+            <div class="profile-info">
+                <div class="profile-card">
+                    <div class="profile-label">Resume Status</div>
+                    <div class="profile-value">
+                        {% if profile.resume %}
+                            ✅ Uploaded
+                        {% else %}
+                            ❌ Not Uploaded
+                        {% endif %}
+                    </div>
+                </div>
+                {% if profile.field %}
+                <div class="profile-card">
+                    <div class="profile-label">Field</div>
+                    <div class="profile-value">{{ profile.field }}</div>
+                </div>
+                {% endif %}
+                {% if profile.designation %}
+                <div class="profile-card">
+                    <div class="profile-label">Current Designation</div>
+                    <div class="profile-value">{{ profile.designation }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="action-buttons">
+                <a href="{% url 'upload_resume' %}" class="btn btn-secondary">
+                    <span class="btn-icon">📄</span>
+                    Upload / Re-upload Resume
+                </a>
+                
+                {% if profile.designation %}
+                    <a href="{% url 'select_designation' %}" class="btn btn-secondary">
+                        <span class="btn-icon">🔄</span>
+                        Change Designation
+                    </a>
+                    
+                    <form action="{% url 'ai_interview' %}" method="get" style="display: inline;">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="btn-icon">🤖</span>
+                            Start AI Interview
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Recommended Jobs Section -->
+        {% if recommended_jobs %}
+        <div class="jobs-section">
+            <h3 class="jobs-title">
+                <span>🎯</span> Recommended Jobs for {{ profile.designation }}
+            </h3>
+            <div class="jobs-grid">
+                {% for job in recommended_jobs %}
+                <div class="job-card">
+                    {% if job.is_available %}
+                        <h4 class="job-title"><a href="{{ job.source_url }}" target="_blank" onclick="sendApplyEmail('{{ job.title|escapejs }}', '{{ job.company|escapejs }}', '{{ job.source_url|escapejs }}')" style="text-decoration: none; color: inherit;">{{ job.title }}</a></h4>
+                    {% else %}
+                        <h4 class="job-title">{{ job.title }}</h4>
+                    {% endif %}
+                    <div class="job-company">{{ job.company }}</div>
+                    <div class="job-details">
+                        <span class="job-badge" style="background: #eef2ff; color: #4f46e5;">🌐 {{ job.source }}</span>
+                        <span class="job-badge" style="background: #fdf4ff; color: #c026d3;">✨ {{ job.match_percentage }}% Match</span>
+                        <span class="job-badge">📍 {{ job.location }}</span>
+                        <span class="job-badge">💼 {{ job.type }}</span>
+                        <span class="job-badge salary">💵 {{ job.salary }}</span>
+                    </div>
+                    <div class="job-description" style="font-size: 0.9rem; color: #666; margin-top: 10px; line-height: 1.4;">
+                        {{ job.description }}
+                    </div>
+                    <div class="job-action">
+                        {% if job.is_available %}
+                            <span class="job-posted">Posted {{ job.posted }}</span>
+                            <div style="display: flex; gap: 10px;">
+                                <a href="{{ job.source_url }}" target="_blank" class="btn job-apply-btn" style="background: #f3f4f6 !important; color: #374151 !important; border-color: #d1d5db !important;">View Job</a>
+                                <a href="{{ job.source_url }}" target="_blank" onclick="sendApplyEmail('{{ job.title|escapejs }}', '{{ job.company|escapejs }}', '{{ job.source_url|escapejs }}')" class="btn job-apply-btn">Apply Now</a>
+                            </div>
+                        {% else %}
+                            <p class="unavailable-msg" style="color: #ef4444; font-size: 0.85rem; margin: 10px 0 0 0; width: 100%; text-align: left; font-weight: 500;">Application link unavailable</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- History Section -->
+        <div class="history-container">
+            <!-- AI Interview History -->
+            <div class="history-column">
+                <h3 class="history-title">AI-Based Interview History</h3>
+                <div class="history-scroll">
+                    {% if ai_records %}
+                        {% for record in ai_records %}
+                            <div class="interview-card">
+                                <div class="interview-detail">
+                                    <strong>Date:</strong> {{ record.created_at|date:'Y-m-d' }}
+                                </div>
+                                <div class="interview-detail">
+                                    <strong>Role:</strong> {{ record.role }}
+                                </div>
+                                <div class="interview-detail">
+                                    <strong>Designation:</strong> {{ record.designation }}
+                                </div>
+                                <div class="interview-detail">
+                                    <strong>Score:</strong> 
+                                    <span class="score-display">
+                                        {{ record.average }}/5 ⭐
+                                    </span>
+                                </div>
+                                <a href="{% url 'view_ai_evaluation_db' record.id %}"
+                                   class="view-evaluation-btn">
+                                    📊 View Full Evaluation
+                                </a>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-interviews">
+                            <p>No AI interviews completed yet. Start your first interview above! 🚀</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- HR Video Interview History -->
+            <div class="history-column">
+                <h3 class="history-title">HR Video Interview Management</h3>
+                <div class="history-scroll">
+                    {% if profile.designation %}
+                        <div class="hr-interview-actions">
+                            <a href="{% url 'hr_interview_role_selection' %}" class="btn btn-primary" style="width: 100%; margin-bottom: 15px; background: #ffffff;">
+                                <span class="btn-icon">📅</span>
+                                Book New HR Interview
+                            </a>
+                            <a href="{% url 'upcoming_hr_interviews' %}" class="btn btn-secondary" style="width: 100%; margin-bottom: 15px;">
+                                <span class="btn-icon">📋</span>
+                                View My Bookings
+                            </a>
+                            <a href="{% url 'hr_interview_history' %}" class="btn btn-info" style="width: 100%; background: #ffffff;">
+                                <span class="btn-icon">📊</span>
+                                HR Video Interview History
+                            </a>
+                        </div>
+                        
+                        <div class="info-box" style="background: #e3f2fd; border: 1px solid #bbdefb; border-radius: 8px; padding: 15px; margin-top: 15px; color: #1565c0;">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>HR Video Interviews:</strong><br>
+                            • 30-minute sessions with real HR professionals<br>
+                            • Jitsi Meet video integration<br>
+                            • Available 9 AM - 5 PM<br>
+                            • No score requirements - book anytime!
+                        </div>
+                    {% else %}
+                        <div class="no-interviews">
+                            <p>Please select your designation first to book HR interviews.</p>
+                            <a href="{% url 'select_designation' %}" class="btn btn-primary" style="margin-top: 10px;">
+                                Select Designation
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function sendApplyEmail(title, company, link) {
+            fetch("{% url 'apply_job_email' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    'title': title,
+                    'company': company,
+                    'link': link
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Apply email sent:', data);
+            })
+            .catch((error) => {
+                console.error('Error sending apply email:', error);
+            });
+        }
+    </script>
+</body>
+{% else %}
+    <body>
+        <p>You are not logged in. <a href="{% url 'login' %}">Login here</a>.</p>
+    </body>
+{% endif %}
+</html>

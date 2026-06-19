@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AI Mock Interview Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f7fa;
+            color: #222222;
+        }
+
+        .navbar {
+            background: #ffffff;
+            color: #222222;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: #222222;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .welcome-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+        }
+
+        .welcome-section h2 {
+            color: #222222;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-section p {
+            color: #666;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .action-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .action-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .action-card h3 {
+            color: #222222;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-card p {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .action-btn {
+            background: #ffffff;
+            color: #222222;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .recent-activity {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+            margin-top: 2rem;
+        }
+
+        .recent-activity h3 {
+            color: #222222;
+            margin-bottom: 1rem;
+        }
+
+        .activity-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-text {
+            color: #666;
+        }
+
+        .activity-time {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <!-- AIRBNB THEME OVERRIDES -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rausch: #ff385c;
+            --rausch-active: #e00b41;
+            --ink: #222222;
+            --canvas: #ffffff;
+            --surface-soft: #f7f7f7;
+            --hairline: #dddddd;
+            --muted: #6a6a6a;
+            --shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            background: var(--canvas) !important;
+            color: var(--ink) !important;
+        }
+
+        .container, .form-container, .card, .dashboard-card {
+            background: var(--canvas) !important;
+            border-radius: 14px !important;
+            border: 1px solid var(--hairline) !important;
+            box-shadow: var(--shadow) !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--ink) !important;
+            font-weight: 600 !important;
+        }
+
+        button, .btn, .btn-primary, input[type="submit"] {
+            background: var(--rausch) !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            border: none !important;
+            padding: 14px 24px !important;
+            font-weight: 500 !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
+            text-transform: none !important;
+            font-size: 16px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        button:hover, .btn:hover, .btn-primary:hover, input[type="submit"]:hover {
+            background: var(--rausch-active) !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn-secondary, .btn-outline, .btn-cancel {
+            background: var(--canvas) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--ink) !important;
+        }
+
+        .btn-secondary:hover, .btn-outline:hover, .btn-cancel:hover {
+            background: var(--surface-soft) !important;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], input[type="time"], textarea, select, .form-control {
+            background: var(--canvas) !important;
+            border: 1px solid var(--hairline) !important;
+            border-radius: 8px !important;
+            color: var(--ink) !important;
+            padding: 14px 12px !important;
+            box-shadow: none !important;
+            width: 100% !important;
+        }
+
+        input:focus, textarea:focus, select:focus, .form-control:focus {
+            border: 2px solid var(--ink) !important;
+            outline: none !important;
+            padding: 13px 11px !important;
+        }
+
+        a {
+            color: var(--ink) !important;
+            font-weight: 500 !important;
+            text-decoration: underline !important;
+        }
+
+        a:hover {
+            color: var(--muted) !important;
+        }
+
+        .header, nav, .navbar, .top-nav, .sidebar {
+            background: var(--canvas) !important;
+            border-bottom: 1px solid var(--hairline) !important;
+            box-shadow: none !important;
+            color: var(--ink) !important;
+        }
+
+        .header *, nav *, .navbar *, .sidebar * {
+            color: var(--ink) !important;
+        }
+
+        i.fa, i.fas, i.far, i.fab {
+            color: var(--ink) !important;
+        }
+
+        .btn i, button i, .btn-primary i {
+            color: #ffffff !important;
+        }
+
+        .home-btn {
+            background: var(--surface-soft) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--hairline) !important;
+            text-decoration: none !important;
+        }
+        .home-btn:hover {
+            background: var(--hairline) !important;
+        }
+
+        .alert-success {
+            background: #e8f9e8 !important;
+            color: #1a5e1a !important;
+            border: 1px solid #1a5e1a !important;
+        }
+        
+        .alert-error, .alert-danger {
+            background: #fdf2f2 !important;
+            color: var(--rausch) !important;
+            border: 1px solid var(--rausch) !important;
+        }
+
+        /* Remove background gradients */
+        body { background-image: none !important; }
+        .header { background-image: none !important; }
+        .btn { background-image: none !important; }
+        .logo { background-clip: initial !important; -webkit-text-fill-color: initial !important; color: var(--rausch) !important; }
+        .logo-icon { background: var(--rausch) !important; color: white !important; }
+        
+        /* Specific adjustments for search/pills */
+        .search-bar, .pill {
+            border-radius: 9999px !important;
+        }
+
+        /* Listing card adjustments */
+        .property-card {
+            border-radius: 14px !important;
+            overflow: hidden !important;
+            border: none !important;
+        }
+
+        /* Fix label colors */
+        label {
+            color: var(--ink) !important;
+            font-weight: 500 !important;
+        }
+    </style>
+    <!-- END AIRBNB THEME -->
+</head>
+<body>
+    <nav class="navbar">
+        <h1>🔐 Admin Dashboard</h1>
+        <div class="user-info">
+            <span>Welcome, {{ admin_name }}</span>
+            <a href="{% url 'admin_logout' %}" class="logout-btn">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="welcome-section">
+            <h2>Welcome back, {{ admin_name }}! 👋</h2>
+            <p>Here's an overview of your AI Mock Interview Platform</p>
+        </div>
+
+        <div class="stats-grid">
+            <a href="{% url 'manage_candidates' %}" style="text-decoration:none;color:inherit">
+                <div class="stat-card">
+                    <div class="icon">👥</div>
+                    <div class="number">{{ total_candidates }}</div>
+                    <div class="label">Total Candidates</div>
+                </div>
+            </a>
+            <div class="stat-card">
+                <div class="icon">📊</div>
+                <div class="number">{{ ai_interviews_conducted }}</div>
+                <div class="label">AI Interviews Conducted</div>
+            </div>
+            <a href="{% url 'manage_hr' %}" style="text-decoration:none;color:inherit">
+                <div class="stat-card">
+                    <div class="icon">👨‍💼</div>
+                    <div class="number">{{ total_hrs }}</div>
+                    <div class="label">Total HRs</div>
+                </div>
+            </a>
+            <div class="stat-card">
+                <div class="icon">🎯</div>
+                <div class="number">{{ hr_interviews_conducted }}</div>
+                <div class="label">HR Interviews Conducted</div>
+            </div>
+        </div>
+
+        <div class="actions-grid">
+            <div class="action-card">
+                <h3>👥 Manage Candidates</h3>
+                <p>View and manage all candidate profiles, resumes, and interview history.</p>
+                <a class="action-btn" href="{% url 'manage_candidates' %}">View Candidates</a>
+            </div>
+            
+            <div class="action-card">
+                <h3>👨‍💼 HR Registration</h3>
+                <p>Register new HR users and create accounts for HR professionals.</p>
+                <a href="{% url 'hr_registration' %}" class="action-btn">Register HR</a>
+            </div>
+            
+            <div class="action-card">
+                <h3>🔧 Manage HR</h3>
+                <p>View, edit, and manage existing HR accounts and their permissions.</p>
+                <a class="action-btn" href="{% url 'manage_hr' %}">Manage HR</a>
+            </div>
+            
+            <div class="action-card">
+                <h3>📊 Interview Analytics</h3>
+                <p>Analyze interview performance, success rates, and platform usage statistics.</p>
+                <a class="action-btn" href="{% url 'admin_analytics' %}">View Analytics</a>
+            </div>
+            
+            <div class="action-card">
+                <h3>⚙️ System Settings</h3>
+                <p>Configure global platform settings, including job recommendation rules.</p>
+                <a class="action-btn" href="{% url 'admin_settings' %}">Manage Settings</a>
+            </div>
+            
+            <div class="action-card">
+                <h3>✉️ Job Approvals</h3>
+                <p>Review and approve job recommendations before candidates see them.</p>
+                <a class="action-btn" href="{% url 'admin_manage_jobs' %}">Manage Jobs</a>
+            </div>
+        </div>
+
+        <div class="recent-activity">
+            <h3>📋 Recent Activity</h3>
+            <div class="activity-item">
+                <span class="activity-text">Recent HRs</span>
+                <span class="activity-time"></span>
+            </div>
+            {% for hr in recent_hrs %}
+            <div class="activity-item">
+                <span class="activity-text">HR: {{ hr.full_name }} ({{ hr.email }})</span>
+                <span class="activity-time">{{ hr.created_at|date:"Y-m-d H:i" }}</span>
+            </div>
+            {% empty %}
+            <div class="activity-item"><span class="activity-text">No HRs yet.</span></div>
+            {% endfor %}
+
+            <div class="activity-item" style="margin-top:1rem;">
+                <span class="activity-text">Recent Candidates</span>
+                <span class="activity-time"></span>
+            </div>
+            {% for c in recent_candidates %}
+            <div class="activity-item">
+                <span class="activity-text">Candidate: {{ c.user.email }}{% if c.designation %} - {{ c.designation }}{% endif %}</span>
+                <span class="activity-time">{{ c.user.date_joined|date:"Y-m-d H:i" }}</span>
+            </div>
+            {% empty %}
+            <div class="activity-item"><span class="activity-text">No candidates yet.</span></div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

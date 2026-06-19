@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Interview - HR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f0f2f5; margin: 0; padding: 0; color: #222222; }
+        .navbar {
+            background: #ffffff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: rgba(0,0,0,0.1) 0 4px 8px;
+            margin-bottom: 10px;
+        }
+        .navbar-brand {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-link {
+            text-decoration: none;
+            color: #222222;
+            font-weight: 500;
+            padding: 8px 16px;
+            background: #f7f7f7;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .nav-link:hover {
+            background: #e2e2e2;
+        }
+        .interview-container {
+            display: flex;
+            height: calc(100vh - 80px);
+            padding: 0 10px 10px 10px;
+            gap: 10px;
+        }
+        .jitsi-frame {
+            flex: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <i class="fas fa-video"></i>
+            Live Interview Room - {{ booking.candidate.get_full_name|default:booking.candidate.username }}
+        </div>
+        <a href="{% url 'hr_manage_interviews' %}" class="nav-link">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </nav>
+
+    <div class="interview-container">
+        <!-- Jitsi Frame -->
+        <div class="jitsi-frame">
+            <iframe src="{{ booking.meeting_url }}" width="100%" height="100%" allow="camera; microphone; fullscreen; display-capture" style="border: none;"></iframe>
+        </div>
+    </div>
+</body>
+</html>

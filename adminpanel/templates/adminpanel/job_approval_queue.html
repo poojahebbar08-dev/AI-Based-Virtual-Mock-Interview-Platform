@@ -1,0 +1,130 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Approval Queue - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --rausch: #ff385c;
+            --rausch-active: #e00b41;
+            --ink: #222222;
+            --canvas: #ffffff;
+            --surface-soft: #f7f7f7;
+            --hairline: #dddddd;
+            --muted: #6a6a6a;
+            --shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--surface-soft); color: var(--ink); margin: 0; }
+        .navbar { background: var(--canvas); color: var(--ink); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--hairline); }
+        .navbar h1 { font-size: 1.5rem; font-weight: 600; margin: 0; }
+        .navbar a { color: var(--ink); text-decoration: none; margin-left: 1rem; font-weight: 500; }
+        .navbar a:hover { color: var(--muted); }
+        
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: var(--canvas); border-radius: 14px; padding: 2rem; border: 1px solid var(--hairline); box-shadow: var(--shadow); margin-bottom: 2rem; }
+        
+        .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+        .alert-success { background: #e8f9e8; color: #1a5e1a; border: 1px solid #1a5e1a; }
+        .alert-error { background: #fdf2f2; color: var(--rausch); border: 1px solid var(--rausch); }
+        
+        .queue-item { border: 1px solid var(--hairline); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+        .queue-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--hairline); padding-bottom: 1rem; margin-bottom: 1rem; }
+        .queue-title { font-weight: 600; font-size: 1.1rem; }
+        .queue-meta { color: var(--muted); font-size: 0.9rem; }
+        
+        .job-card { background: var(--surface-soft); border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; }
+        .job-title { font-weight: 600; margin-bottom: 0.25rem; }
+        .job-company { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.25rem; }
+        
+        .actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .btn { padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; text-decoration: none; border: none; display: inline-block; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: var(--rausch); color: white; }
+        .btn-danger:hover { background: var(--rausch-active); }
+        
+        .status-badge { padding: 4px 8px; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-approved { background: #e8f9e8; color: #1a5e1a; }
+        .status-rejected { background: #fdf2f2; color: var(--rausch); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>✉️ Job Recommendation Queue</h1>
+        <div>
+            <a href="{% url 'admin_dashboard' %}"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card">
+            <h2 style="margin-top: 0; margin-bottom: 1.5rem;">Pending Approvals ({{ pending_queue|length }})</h2>
+            
+            {% for item in pending_queue %}
+                <div class="queue-item">
+                    <div class="queue-header">
+                        <div>
+                            <div class="queue-title">Jobs for {{ item.candidate.username }} ({{ item.candidate.email }})</div>
+                            <div class="queue-meta">Interview Type: {{ item.get_interview_type_display }} | Created: {{ item.created_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                        <div class="status-badge status-pending">Pending</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;"><strong>Proposed Recommendations:</strong></div>
+                    {% for job in item.jobs_data %}
+                        <div class="job-card">
+                            <div class="job-title">{{ job.title }}</div>
+                            <div class="job-company">{{ job.company }} - {{ job.location }}</div>
+                        </div>
+                    {% endfor %}
+                    
+                    <div class="actions">
+                        <form action="{% url 'approve_job_recommendation' item.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Approve & Send Email</button>
+                        </form>
+                        <form action="{% url 'reject_job_recommendation' item.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i> Reject</button>
+                        </form>
+                    </div>
+                </div>
+            {% empty %}
+                <p style="color: var(--muted);">No pending job recommendations.</p>
+            {% endfor %}
+        </div>
+        
+        <div class="card">
+            <h2 style="margin-top: 0; margin-bottom: 1.5rem;">Recent History</h2>
+            
+            {% for item in history_queue %}
+                <div class="queue-item" style="background: #fdfdfd; opacity: 0.8;">
+                    <div class="queue-header" style="border: none; margin: 0; padding: 0;">
+                        <div>
+                            <div class="queue-title">Jobs for {{ item.candidate.email }}</div>
+                            <div class="queue-meta">Processed: {{ item.processed_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                        <div class="status-badge status-{{ item.status }}">{{ item.status }}</div>
+                    </div>
+                </div>
+            {% empty %}
+                <p style="color: var(--muted);">No processed history.</p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

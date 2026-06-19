@@ -1,0 +1,211 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Resume</title>
+    <link rel="stylesheet" href="{% static 'css/resume_upload.css' %}">
+
+    <!-- CUSTOM STYLING -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Full-page background image */
+        body {
+            background: url("{% static 'images/resume_bg.jpg' %}") no-repeat center center fixed !important;
+            background-size: cover !important;
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism card with readable text */
+        .upload-container {
+            background: rgba(255, 255, 255, 0.92) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            color: #1a202c !important;
+        }
+
+        /* Headings */
+        .upload-container h2 {
+            color: #1a202c !important;
+        }
+
+        /* Labels clearly visible */
+        .upload-container label {
+            color: #2d3748 !important;
+            font-weight: 600 !important;
+        }
+
+        /* Links */
+        .upload-container a {
+            color: #5a67d8 !important;
+            text-decoration: underline !important;
+        }
+        .upload-container a:hover {
+            color: #4c51bf !important;
+        }
+
+        /* Help text */
+        .upload-container .helptext {
+            color: #4a5568 !important;
+        }
+
+        /* OR separator */
+        .dashboard-container::before {
+            color: #718096 !important;
+            background: rgba(255, 255, 255, 0.92) !important;
+        }
+
+        /* Checkbox label fix */
+        .upload-container input[type="checkbox"] + label,
+        .upload-container p {
+            color: #2d3748 !important;
+        }
+    </style>
+    <!-- END CUSTOM STYLING -->
+</head>
+<body>
+    <div class="upload-container">
+        <h2>Upload Resume</h2>
+        
+        <form method="post" enctype="multipart/form-data" id="resumeUploadForm">
+            {% csrf_token %}
+            {{ form.as_p }}
+            
+            <div class="button-container">
+                <button type="submit">Upload Resume</button>
+            </div>
+        </form>
+
+        <!-- Dashboard Button Section -->
+        <div class="dashboard-container">
+            <a href="/candidate/dashboard/" class="dashboard-btn">
+                Go to Dashboard
+            </a>
+        </div>
+
+        <!-- Success Message -->
+        <div id="success-message" style="display: none;">
+            Resume uploaded successfully! Redirecting to dashboard...
+        </div>
+    </div>
+
+    <!-- JavaScript for form handling -->
+    <script>
+        document.getElementById("resumeUploadForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            
+            const form = document.getElementById("resumeUploadForm");
+            const formData = new FormData(form);
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const successMessage = document.getElementById("success-message");
+            
+            // Disable submit button and show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Uploading...";
+            
+            // Hide previous success message
+            successMessage.style.display = "none";
+            
+            fetch(form.action || window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json().catch(() => ({})).then(data => {
+                        successMessage.style.display = "block";
+                        successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        form.reset();
+                        const redirectUrl = (data && data.redirect) ? data.redirect : '/candidate/dashboard/';
+                        setTimeout(() => { window.location.href = redirectUrl; }, 2000);
+                    });
+                }
+                // Non-ok: try JSON error body; avoid parsing HTML (e.g. 500 page) as JSON
+                const contentType = response.headers.get("Content-Type") || "";
+                if (contentType.includes("application/json")) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || "An error occurred while uploading the resume.");
+                    });
+                }
+                throw new Error("Upload failed. Please try again or use a different file.");
+            })
+            .catch(error => {
+                console.error("Error uploading resume:", error);
+                alert(error.message || "Error uploading resume. Please try again.");
+            })
+            .finally(() => {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Upload Resume";
+            });
+        });
+
+        // Optional: Add drag and drop functionality
+        const form = document.getElementById("resumeUploadForm");
+        const fileInput = form.querySelector('input[type="file"]');
+        
+        if (fileInput) {
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                form.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            // Highlight drop area when item is dragged over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                form.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                form.addEventListener(eventName, unhighlight, false);
+            });
+
+            // Handle dropped files
+            form.addEventListener('drop', handleDrop, false);
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function highlight(e) {
+                form.classList.add('drag-over');
+            }
+
+            function unhighlight(e) {
+                form.classList.remove('drag-over');
+            }
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    // Trigger change event
+                    const event = new Event('change', { bubbles: true });
+                    fileInput.dispatchEvent(event);
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Additional styles for drag and drop */
+        .drag-over {
+            background: rgba(102, 126, 234, 0.05) !important;
+            border-color: #667eea !important;
+        }
+        
+        .drag-over input[type="file"] {
+            border-color: #667eea !important;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e6f3ff 100%) !important;
+        }
+    </style>
+</body>
+</html>

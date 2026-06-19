@@ -1,0 +1,178 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Jobs - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --rausch: #ff385c;
+            --rausch-active: #e00b41;
+            --ink: #222222;
+            --canvas: #ffffff;
+            --surface-soft: #f7f7f7;
+            --hairline: #dddddd;
+            --muted: #6a6a6a;
+            --shadow: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px, rgba(0,0,0,0.1) 0 4px 8px;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--surface-soft); color: var(--ink); margin: 0; }
+        .navbar { background: var(--canvas); color: var(--ink); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--hairline); }
+        .navbar h1 { font-size: 1.5rem; font-weight: 600; margin: 0; }
+        .navbar a { color: var(--ink); text-decoration: none; margin-left: 1rem; font-weight: 500; }
+        .navbar a:hover { color: var(--muted); }
+        
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: var(--canvas); border-radius: 14px; padding: 2rem; border: 1px solid var(--hairline); box-shadow: var(--shadow); margin-bottom: 2rem; }
+        
+        .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+        .alert-success { background: #e8f9e8; color: #1a5e1a; border: 1px solid #1a5e1a; }
+        .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #856404; }
+        .alert-error { background: #fdf2f2; color: var(--rausch); border: 1px solid var(--rausch); }
+        
+        .filters { display: flex; gap: 10px; margin-bottom: 1.5rem; }
+        .filter-btn { padding: 8px 16px; border-radius: 6px; text-decoration: none; border: 1px solid var(--hairline); color: var(--ink); font-weight: 500; }
+        .filter-btn.active { background: var(--ink); color: white; border-color: var(--ink); }
+        .filter-btn:hover:not(.active) { background: var(--surface-soft); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--hairline); }
+        th { font-weight: 600; background: var(--surface-soft); }
+        
+        .job-title { font-weight: 600; color: var(--ink); text-decoration: none; }
+        .job-title:hover { text-decoration: underline; }
+        .job-company { color: var(--muted); font-size: 0.9rem; }
+        
+        .actions { display: flex; gap: 10px; margin-top: 1.5rem; }
+        .btn { padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; border: none; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: var(--rausch); color: white; }
+        .btn-danger:hover { background: var(--rausch-active); }
+        
+        .status-badge { padding: 4px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-approved { background: #e8f9e8; color: #1a5e1a; }
+        .status-rejected { background: #fdf2f2; color: var(--rausch); }
+        
+        .select-col { width: 40px; text-align: center; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>💼 Job Approvals</h1>
+        <div>
+            <a href="{% url 'admin_dashboard' %}"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card">
+            <div class="filters">
+                <a href="?status=pending" class="filter-btn {% if current_status == 'pending' %}active{% endif %}">Pending</a>
+                <a href="?status=approved" class="filter-btn {% if current_status == 'approved' %}active{% endif %}">Approved</a>
+                <a href="?status=rejected" class="filter-btn {% if current_status == 'rejected' %}active{% endif %}">Rejected</a>
+                <a href="?status=all" class="filter-btn {% if current_status == 'all' %}active{% endif %}">All Jobs</a>
+            </div>
+            
+            <form action="{% url 'admin_manage_jobs_action' %}" method="post">
+                {% csrf_token %}
+                
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="select-col">
+                                    <input type="checkbox" id="selectAll" onclick="toggleSelectAll()">
+                                </th>
+                                <th>Job Details</th>
+                                <th>Candidate</th>
+                                <th>Source</th>
+                                <th>Match</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                            <tr>
+                                <td class="select-col">
+                                    <input type="checkbox" name="job_ids" value="{{ job.id }}" class="job-checkbox">
+                                </td>
+                                <td>
+                                    <div><a href="{{ job.source_url }}" target="_blank" class="job-title">{{ job.title }}</a></div>
+                                    <div class="job-company">{{ job.company }} &bull; {{ job.location }}</div>
+                                </td>
+                                <td>
+                                    <div>{{ job.candidate.candidateprofile.name|default:job.candidate.username }}</div>
+                                    <div class="job-company">{{ job.candidate.email }}</div>
+                                </td>
+                                <td>
+                                    <span style="font-size: 0.85rem; padding: 2px 6px; background: #eef2ff; color: #4f46e5; border-radius: 4px;">{{ job.source }}</span>
+                                </td>
+                                <td><strong>{{ job.match_percentage }}%</strong></td>
+                                <td>
+                                    <span class="status-badge status-{{ job.status }}">{{ job.status }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--muted);">
+                                    No jobs found for the selected status.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if jobs %}
+                <div class="actions">
+                    <button type="submit" name="action" value="approve" class="btn btn-success" onclick="return confirmAction('approve')">
+                        <i class="fas fa-check"></i> Approve Selected & Email
+                    </button>
+                    <button type="submit" name="action" value="reject" class="btn btn-warning" onclick="return confirmAction('reject')">
+                        <i class="fas fa-times"></i> Reject Selected
+                    </button>
+                    <button type="submit" name="action" value="delete" class="btn btn-danger" onclick="return confirmAction('delete')">
+                        <i class="fas fa-trash"></i> Delete Selected
+                    </button>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.job-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        }
+        
+        function confirmAction(action) {
+            const checked = document.querySelectorAll('.job-checkbox:checked').length;
+            if (checked === 0) {
+                alert("Please select at least one job.");
+                return false;
+            }
+            if (action === 'delete') {
+                return confirm(`Are you sure you want to completely delete ${checked} selected jobs?`);
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>

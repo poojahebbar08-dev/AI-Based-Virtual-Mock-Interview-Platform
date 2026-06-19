@@ -1,0 +1,17 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('login/', views.login_view, name='admin_login'),
+    path('dashboard/', views.dashboard_view, name='admin_dashboard'),
+    path('logout/', views.logout_view, name='admin_logout'),
+    path('hr-registration/', views.hr_registration_view, name='hr_registration'),
+    path('manage-hr/', views.manage_hr_view, name='manage_hr'),
+    path('edit-hr/<int:hr_id>/', views.edit_hr_view, name='edit_hr'),
+    path('toggle-hr/<int:hr_id>/', views.toggle_hr_active_view, name='toggle_hr_active'),
+    path('candidates/', views.manage_candidates_view, name='manage_candidates'),
+    path('analytics/', views.analytics_view, name='admin_analytics'),
+    path('settings/', views.settings_view, name='admin_settings'),
+    path('manage-jobs/', views.manage_jobs_view, name='admin_manage_jobs'),
+    path('manage-jobs/action/', views.manage_jobs_action_view, name='admin_manage_jobs_action'),
+]

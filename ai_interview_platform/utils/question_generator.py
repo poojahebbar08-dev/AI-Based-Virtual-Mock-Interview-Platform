@@ -197,18 +197,18 @@ def get_fallback_questions(role, designation, difficulty, num_questions):
             f"What is your approach to code review and maintaining code quality?"
         ],
         "hard": [
-            f"Write a Python script to perform load balancing for a distributed {designation} service.",
-            f"Implement a function that optimizes a complex database query used by a {designation}.",
-            f"Design an architecture for a high-availability system and explain the trade-offs.",
-            f"Write a Python script to detect and resolve race conditions in multi-threaded code.",
-            f"Explain deep internals of memory management in your primary programming language."
+            f"[CODING] Write a Python script to perform load balancing for a distributed {designation} service.",
+            f"[CODING] Implement a function that optimizes a complex database query used by a {designation}.",
+            f"[CODING] Design an architecture for a high-availability system and explain the trade-offs.",
+            f"[CODING] Write a Python script to detect and resolve race conditions in multi-threaded code.",
+            f"[CODING] Explain deep internals of memory management in your primary programming language."
         ],
         "advanced": [
-            f"Write a Python script that implements a custom caching mechanism with an LRU eviction policy.",
-            f"Implement a function that handles leader election in a distributed system.",
-            f"Design a highly scalable microservices architecture for a global application.",
-            f"Write a script to analyze and mitigate a sophisticated security vulnerability.",
-            f"What are the hardest algorithmic optimization problems you've solved?"
+            f"[CODING] Write a Python script that implements a custom caching mechanism with an LRU eviction policy.",
+            f"[CODING] Implement a function that handles leader election in a distributed system.",
+            f"[CODING] Design a highly scalable microservices architecture for a global application.",
+            f"[CODING] Write a script to analyze and mitigate a sophisticated security vulnerability.",
+            f"[CODING] What are the hardest algorithmic optimization problems you've solved?"
         ]
     }
     

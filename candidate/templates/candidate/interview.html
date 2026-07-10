@@ -273,9 +273,9 @@
     <div class="question-display">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h2>🎤 AI Interview Session</h2>
-            <div style="font-size: 20px; font-weight: bold; color: #e74c3c; background: #fff; padding: 10px; border-radius: 8px; border: 2px solid #e74c3c;">
-                ⏱️ Time Left: <span id="global-timer">03:00</span>
-            </div>
+        <div style="font-size: 20px; font-weight: bold; color: #e74c3c; background: #fff; padding: 10px; border-radius: 8px; border: 2px solid #e74c3c;">
+            ⏱️ Time Left: <span id="global-timer">{% if is_coding %}10:00{% else %}02:00{% endif %}</span>
+        </div>
         </div>
         <h3>Question {{ current_index|add:1 }} of {{ total }}</h3>
         <p id="question-text" style="font-size: 18px; line-height: 1.6;">{{ question }}</p>

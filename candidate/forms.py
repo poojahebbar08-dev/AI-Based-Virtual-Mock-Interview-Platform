@@ -115,6 +115,26 @@ class ResumeUploadForm(forms.ModelForm):
         model = CandidateProfile
         fields = ['resume']
 
+    def clean_resume(self):
+        resume = self.cleaned_data.get('resume')
+        if resume:
+            # 1. Accept only PDF resumes (case-insensitive extension check)
+            filename = resume.name.lower()
+            if not filename.endswith('.pdf'):
+                raise forms.ValidationError("Please upload your resume in PDF format only.")
+            
+            # Read first few bytes to check if it's a valid PDF structure
+            try:
+                # Read 4 bytes to check magic number
+                header = resume.read(4)
+                # Reset file pointer so form.save() can still read it
+                resume.seek(0)
+                if header != b'%PDF':
+                    raise forms.ValidationError("Please upload your resume in PDF format only.")
+            except Exception:
+                raise forms.ValidationError("Please upload your resume in PDF format only.")
+        return resume
+
 #designation selection
 class DesignationForm(forms.Form):
     DESIGNATION_CHOICES = {

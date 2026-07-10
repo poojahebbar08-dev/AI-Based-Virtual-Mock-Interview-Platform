@@ -717,11 +717,57 @@ def reject_interview_view(request, booking_id):
             start_str = booking.time_slot.start_time.strftime('%I:%M %p')
             end_str = booking.time_slot.end_time.strftime('%I:%M %p')
             
-            message = f'''<p>Hello {candidate_name},</p>
-<p>I am not available at this slot or on this day so choose a different time like hr only gives the some time slot where they are free if the candidate is convinent in that time they can select or else they can choose a different day where hr is available.</p>
-<p><strong>Your previously selected time:</strong> {date_str} at {start_str} - {end_str} for the designation of {booking.designation}.</p>
-<p>Please login to your dashboard to book another available slot.</p>
-<p>Best regards,<br>{hr_user.full_name}<br>AI Mock Interview Platform Team</p>'''
+            from django.urls import reverse
+            login_url = request.build_absolute_uri(reverse('candidate_login'))
+            
+            message = f'''
+<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #dddddd; border-radius: 12px; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: #222222;">
+  <div style="text-align: center; border-bottom: 1px solid #f0f0f0; padding-bottom: 20px; margin-bottom: 20px;">
+    <h2 style="color: #ff385c; margin: 0; font-size: 24px; font-weight: 700;">Interview Rejected</h2>
+    <p style="color: #6a6a6a; margin: 5px 0 0 0; font-size: 14px;">AI Mock Interview Platform</p>
+  </div>
+  
+  <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hello <strong>{candidate_name}</strong>,</p>
+  
+  <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">We regret to inform you that your interview with HR <strong>{hr_user.full_name}</strong> for the designation of <strong>{booking.designation}</strong> has been rejected.</p>
+
+  <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">Please book another available slot that is convenient for you.</p>
+  
+  <div style="background-color: #f7f7f7; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="padding: 6px 0; color: #6a6a6a; font-size: 14px; width: 170px;"><strong>Previously Selected Date:</strong></td>
+        <td style="padding: 6px 0; color: #222222; font-size: 14px; font-weight: 500;">{date_str}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #6a6a6a; font-size: 14px;"><strong>Time:</strong></td>
+        <td style="padding: 6px 0; color: #222222; font-size: 14px; font-weight: 500;">{start_str} - {end_str}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #6a6a6a; font-size: 14px;"><strong>Host (HR):</strong></td>
+        <td style="padding: 6px 0; color: #222222; font-size: 14px; font-weight: 500;">{hr_user.full_name} ({hr_user.email})</td>
+      </tr>
+    </table>
+  </div>
+
+  <p style="font-size: 14px; color: #6a6a6a; line-height: 1.6; margin-bottom: 12px; text-align: center;">
+    You can log in to your dashboard to view the scheduling and book another slot:
+  </p>
+  
+  <div style="text-align: center; margin-bottom: 24px;">
+    <a href="{login_url}" target="_blank" style="background-color: #ff385c; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; display: inline-block; font-size: 15px; box-shadow: 0 2px 4px rgba(255,56,92,0.2);">
+      Candidate Login & Dashboard
+    </a>
+  </div>
+
+  <hr style="border: 0; border-top: 1px solid #f0f0f0; margin-bottom: 20px;">
+  
+  <p style="font-size: 12px; color: #888888; text-align: center; margin: 0; line-height: 1.5;">
+    Best regards,<br>
+    <strong>AI Mock Interview Platform Team</strong>
+  </p>
+</div>
+'''
             
             send_brevo_email(booking.candidate.email, subject, message)
             

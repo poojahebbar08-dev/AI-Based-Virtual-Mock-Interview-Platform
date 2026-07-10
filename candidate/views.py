@@ -357,15 +357,15 @@ def upload_resume(request):
         # Parse from temp file created before upload
         if temp_resume_path:
             try:
-                parsed = parse_resume_and_detect_field(temp_resume_path)
+                parsed = parse_resume_and_detect_field(temp_resume_path, candidate_name=profile.name)
                 
-                if not parsed.get("is_resume", True):
+                if not parsed.get("is_resume", False):
                     if profile.resume:
                         profile.resume.delete(save=False)
                         profile.resume = None
                         profile.save()
                     
-                    error_msg = "The uploaded document does not appear to be a resume. Please upload a proper resume."
+                    error_msg = "Please upload a valid resume. The uploaded PDF does not appear to be a resume."
                     if is_ajax:
                         return JsonResponse({"error": error_msg}, status=400)
                     else:
@@ -396,14 +396,33 @@ def upload_resume(request):
                     messages.warning(request, "Resume uploaded but could not detect IT/Non-IT. Please select manually.")
             except Exception as e:
                 print(f"Resume parsing failed: {e}")
-                messages.warning(request, "Resume uploaded, but parsing failed. Please select your designation manually.")
+                if profile.resume:
+                    profile.resume.delete(save=False)
+                    profile.resume = None
+                    profile.save()
+                error_msg = "Please upload a valid resume. Document parsing failed."
+                if is_ajax:
+                    return JsonResponse({"error": error_msg}, status=400)
+                else:
+                    messages.error(request, error_msg)
+                    return redirect("upload_resume")
             finally:
-                try:
-                    if temp_resume_path and os.path.exists(temp_resume_path):
+                if temp_resume_path and os.path.exists(temp_resume_path):
+                    try:
                         os.unlink(temp_resume_path)
-                        print(f"Removed temp file: {temp_resume_path}")
-                except Exception as e:
-                    print(f"Failed to delete temp file: {e}")
+                    except:
+                        pass
+        else:
+            if profile.resume:
+                profile.resume.delete(save=False)
+                profile.resume = None
+                profile.save()
+            error_msg = "Please upload a valid resume. Could not process the file."
+            if is_ajax:
+                return JsonResponse({"error": error_msg}, status=400)
+            else:
+                messages.error(request, error_msg)
+                return redirect("upload_resume")
 
         if is_ajax:
             return JsonResponse({"success": True, "redirect": reverse("candidate_dashboard")})
@@ -505,12 +524,19 @@ def interview_question(request):
 
     is_it_role = request.session.get('selected_role') == 'IT'
 
+    current_question = questions[current_index]
+    is_coding = False
+    if current_question.strip().startswith("[CODING]"):
+        is_coding = True
+        current_question = current_question.replace("[CODING]", "").strip()
+
     profile = CandidateProfile.objects.get(user=request.user)
     return render(request, 'candidate/interview.html', {
-        'question': questions[current_index],
+        'question': current_question,
         'current_index': current_index,
         'total': total_questions,
         'is_it_role': is_it_role,
+        'is_coding': is_coding,
         'designation': profile.designation
     })
 

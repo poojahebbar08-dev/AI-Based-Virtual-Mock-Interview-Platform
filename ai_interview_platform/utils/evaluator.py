@@ -6,11 +6,28 @@ from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
-api_key = os.getenv("GROQ_API_KEY")
-if not api_key:
-    raise ValueError("GROQ_API_KEY not found in .env")
 
-client = Groq(api_key=api_key, timeout=60.0)
+# Setup Groq
+GROQ_ENABLED = False
+client = None
+api_key = os.getenv("GROQ_API_KEY")
+if api_key:
+    try:
+        client = Groq(api_key=api_key, timeout=60.0)
+        GROQ_ENABLED = True
+    except Exception:
+        pass
+
+# Setup Gemini
+import google.generativeai as genai
+GEMINI_ENABLED = False
+try:
+    gemini_key = os.getenv("GEMINI_API_KEY_1")
+    if gemini_key:
+        genai.configure(api_key=gemini_key)
+        GEMINI_ENABLED = True
+except Exception:
+    pass
 
 # Use Llama 3 model for evaluation
 MODEL_NAME = "llama-3.3-70b-versatile"
@@ -220,57 +237,74 @@ def evaluate_answer(question, answer, role="", designation="", mode="text", lang
         )
         
         # Generate evaluation with retry logic
+        success = False
+        evaluation = None
         max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                chat_completion = client.chat.completions.create(
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": prompt,
-                        }
-                    ],
-                    model=MODEL_NAME,
-                    temperature=0.3,
-                )
-                response_text = chat_completion.choices[0].message.content.strip()
-                
-                # Extract JSON from response
-                evaluation = extract_json_from_response(response_text)
-                
-                if evaluation and isinstance(evaluation, dict):
-                    # Validate and normalize scores
-                    validated_evaluation = {}
-                    for criterion in EVALUATION_CRITERIA.keys():
-                        score = evaluation.get(criterion, 1)
-                        if isinstance(score, (int, float)) and 1 <= score <= 5:
-                            validated_evaluation[criterion] = int(score)
-                        else:
-                            validated_evaluation[criterion] = 1
-                    
-                    # Calculate overall score
-                    scores = [validated_evaluation[criterion] for criterion in EVALUATION_CRITERIA.keys()]
-                    overall_score = sum(scores) / len(scores)
-                    validated_evaluation["Overall Score"] = round(overall_score, 1)
-                    
-                    # Ensure other fields exist
-                    validated_evaluation["Strengths"] = evaluation.get("Strengths", [])
-                    validated_evaluation["Areas for Improvement"] = evaluation.get("Areas for Improvement", [])
-                    validated_evaluation["Detailed Feedback"] = evaluation.get("Detailed Feedback", "Evaluation completed")
-                    validated_evaluation["Recommendation"] = evaluation.get("Recommendation", "Standard evaluation")
-                    validated_evaluation["Example Answer"] = evaluation.get("Example Answer", "No example answer provided.")
-                    
-                    return validated_evaluation
-                
-            except Exception as e:
-                print(f"Attempt {attempt + 1} failed: {e}")
-                if attempt == max_retries - 1:
-                    raise e
-                continue
         
-        # If all retries failed, return manual evaluation
-        return manual_evaluate_answer(question, cleaned_answer, role, designation)
+        if GROQ_ENABLED and client:
+            for attempt in range(max_retries):
+                try:
+                    chat_completion = client.chat.completions.create(
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": prompt,
+                            }
+                        ],
+                        model=MODEL_NAME,
+                        temperature=0.3,
+                    )
+                    response_text = chat_completion.choices[0].message.content.strip()
+                    evaluation = extract_json_from_response(response_text)
+                    if evaluation and isinstance(evaluation, dict):
+                        success = True
+                        break
+                except Exception as e:
+                    print(f"Groq Attempt {attempt + 1} failed: {e}")
+                    
+        if not success and GEMINI_ENABLED:
+            for attempt in range(max_retries):
+                try:
+                    model = genai.GenerativeModel('gemini-1.5-pro')
+                    response = model.generate_content(
+                        prompt, 
+                        generation_config=genai.GenerationConfig(temperature=0.3)
+                    )
+                    response_text = response.text.strip()
+                    evaluation = extract_json_from_response(response_text)
+                    if evaluation and isinstance(evaluation, dict):
+                        success = True
+                        break
+                except Exception as e:
+                    print(f"Gemini Attempt {attempt + 1} failed: {e}")
         
+        if success and evaluation:
+            # Validate and normalize scores
+            validated_evaluation = {}
+            for criterion in EVALUATION_CRITERIA.keys():
+                score = evaluation.get(criterion, 1)
+                if isinstance(score, (int, float)) and 1 <= score <= 5:
+                    validated_evaluation[criterion] = int(score)
+                else:
+                    validated_evaluation[criterion] = 1
+            
+            # Calculate overall score
+            scores = [validated_evaluation[criterion] for criterion in EVALUATION_CRITERIA.keys()]
+            overall_score = sum(scores) / len(scores)
+            validated_evaluation["Overall Score"] = round(overall_score, 1)
+            
+            # Ensure other fields exist
+            validated_evaluation["Strengths"] = evaluation.get("Strengths", [])
+            validated_evaluation["Areas for Improvement"] = evaluation.get("Areas for Improvement", [])
+            validated_evaluation["Detailed Feedback"] = evaluation.get("Detailed Feedback", "Evaluation completed")
+            validated_evaluation["Recommendation"] = evaluation.get("Recommendation", "Standard evaluation")
+            validated_evaluation["Example Answer"] = evaluation.get("Example Answer", "No example answer provided.")
+            
+            return validated_evaluation
+        else:
+            # If all retries failed, return manual evaluation
+            return manual_evaluate_answer(question, cleaned_answer, role, designation)
+            
     except Exception as e:
         print(f"Evaluation error: {e}")
         # Return manual evaluation for failed cases
@@ -363,17 +397,39 @@ Please provide a 2-3 paragraph career advice summary that includes:
 CRITICAL: Your response MUST be in the following language: {language}. Return ONLY the text of the career advice, no JSON, no markdown formatting blocks.
 """
 
+    success = False
+    advice = ""
     max_retries = 2
-    for attempt in range(max_retries):
-        try:
-            chat_completion = client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model=MODEL_NAME,
-                temperature=0.5,
-            )
-            return chat_completion.choices[0].message.content.strip()
-        except Exception as e:
-            print(f"Career advice generation failed on attempt {attempt+1}: {e}")
-            if attempt == max_retries - 1:
-                return "Unable to generate personalized career advice at this time due to AI service unavailability. However, reviewing standard study materials for your role is always recommended."
-    return "Career advice could not be generated."
+    
+    if GROQ_ENABLED and client:
+        for attempt in range(max_retries):
+            try:
+                chat_completion = client.chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model=MODEL_NAME,
+                    temperature=0.5,
+                )
+                advice = chat_completion.choices[0].message.content.strip()
+                success = True
+                break
+            except Exception as e:
+                print(f"Groq Career advice generation failed on attempt {attempt+1}: {e}")
+                
+    if not success and GEMINI_ENABLED:
+        for attempt in range(max_retries):
+            try:
+                model = genai.GenerativeModel('gemini-1.5-pro')
+                response = model.generate_content(
+                    prompt, 
+                    generation_config=genai.GenerationConfig(temperature=0.5)
+                )
+                advice = response.text.strip()
+                success = True
+                break
+            except Exception as e:
+                print(f"Gemini Career advice generation failed on attempt {attempt+1}: {e}")
+
+    if success and advice:
+        return advice
+        
+    return "Unable to generate personalized career advice at this time due to AI service unavailability. However, reviewing standard study materials for your role is always recommended."

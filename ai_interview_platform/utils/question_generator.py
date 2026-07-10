@@ -81,19 +81,15 @@ def build_enhanced_prompt(role, designation, difficulty, num_questions, previous
     
     coding_instructions = ""
     if role == "IT":
-        if difficulty == "advanced":
-            coding_instructions = "6. You MUST provide ONLY coding test problems, algorithm-based questions, and debugging tasks. All questions must require the candidate to write practical code or debug code."
-        elif difficulty == "hard":
-            coding_instructions = "6. You MUST provide a mix of advanced theoretical questions and coding test questions. Ensure at least 2 questions require the candidate to write code."
+        if difficulty in ["advanced", "hard"]:
+            coding_instructions = "6. You MUST provide a mix of advanced theoretical questions and coding test questions. Ensure at least some questions require the candidate to write code. VERY IMPORTANT: You MUST prefix every coding question exactly with the tag [CODING] at the very beginning of the question text."
         else:
-            coding_instructions = "6. Focus on theoretical knowledge and practical experience. Do NOT ask them to write code scripts."
+            coding_instructions = "6. Focus on theoretical knowledge and practical experience. Do NOT ask them to write code scripts. VERY IMPORTANT: Keep the questions very simple and short, strictly a maximum of 2-3 sentences."
     elif role == "Non-IT":
-        if difficulty == "advanced":
-            coding_instructions = "6. You MUST provide ONLY complex problem-solving scenarios, detailed case studies, and situational judgment tasks. Do NOT ask simple theoretical questions."
-        elif difficulty == "hard":
+        if difficulty in ["advanced", "hard"]:
             coding_instructions = "6. You MUST provide a mix of advanced theoretical questions and complex problem-solving scenarios."
         else:
-            coding_instructions = "6. Focus on industry-relevant theory, professional skills, and basic operations. Do NOT ask complex problem-solving scenarios."
+            coding_instructions = "6. Focus on industry-relevant theory, professional skills, and basic operations. Do NOT ask complex problem-solving scenarios. VERY IMPORTANT: Keep the questions very simple and short, strictly a maximum of 2-3 sentences."
 
     # Add randomness seed to ensure different questions every time
     random_seed = random.randint(1, 1000000)

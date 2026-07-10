@@ -834,8 +834,14 @@ async function initEmotionDetection(video) {
                         }
                     }
                     
+                    // Display fearful as nervous
+                    let displayExpression = maxExpression;
+                    if (maxExpression === 'fearful') {
+                        displayExpression = 'nervous';
+                    }
+                    
                     // Update UI
-                    document.getElementById('emotion-status').innerText = 'Emotion: ' + maxExpression;
+                    document.getElementById('emotion-status').innerText = 'Emotion: ' + displayExpression;
                     
                     // Update aggregate metrics
                     const totalFramesEl = document.getElementById('bio_total_frames');
@@ -846,7 +852,7 @@ async function initEmotionDetection(video) {
                         exprEl.value = parseInt(exprEl.value) + 1;
                     }
                 }
-            }, 1000); // Check every second
+            }, 300); // Check every 300ms for faster detection
         });
     } catch(err) {
         console.error("Biometric analysis failed to load:", err);
@@ -896,7 +902,8 @@ function resetTimer() {
 }
 
 // Global Timer Logic
-let globalTimeLeft = 180; // 3 minutes
+let isCoding = {% if is_coding %}true{% else %}false{% endif %};
+let globalTimeLeft = isCoding ? 600 : 120; // 10 mins if coding, else 2 mins
 let globalTimerInterval;
 
 function startGlobalTimer() {

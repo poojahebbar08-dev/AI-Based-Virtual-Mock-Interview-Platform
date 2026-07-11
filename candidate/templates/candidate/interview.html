@@ -902,7 +902,7 @@ function resetTimer() {
 }
 
 // Global Timer Logic
-let isCoding = {% if is_coding %}true{% else %}false{% endif %};
+let isCoding = '{% if is_coding %}true{% else %}false{% endif %}' === 'true';
 let globalTimeLeft = isCoding ? 600 : 120; // 10 mins if coding, else 2 mins
 let globalTimerInterval;
 

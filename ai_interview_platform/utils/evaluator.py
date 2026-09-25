@@ -22,7 +22,7 @@ if api_key:
 import google.generativeai as genai
 GEMINI_ENABLED = False
 try:
-    gemini_key = os.getenv("GEMINI_API_KEY_1")
+    gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY_1")
     if gemini_key:
         genai.configure(api_key=gemini_key)
         GEMINI_ENABLED = True
